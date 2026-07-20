@@ -1,4 +1,4 @@
-# Sietma Workflow y TensorFlow
+# Sistema Workflow y TensorFlow
 
 Este repositorio reúne la entrega del **primer examen** y del **segundo examen** de la materia, sobre una misma base de software. El proyecto implementa un sistema de gestión de trámites internos por departamentos, donde cada solicitud avanza por etapas, registra historial, puede asociarse a un flujo BPMN y, en la segunda etapa del trabajo, incorpora capacidades de análisis inteligente, seguimiento ciudadano y componentes predictivos.
 
