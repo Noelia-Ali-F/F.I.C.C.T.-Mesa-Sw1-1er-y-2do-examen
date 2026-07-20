@@ -1,0 +1,15 @@
+source_event,priority_norm,sla_factor,history_factor,label
+WF-2026-001-created,1.0,0.1,0.1,0
+WF-2026-001-escalated,1.0,1.0,0.4,1
+WF-2026-002-created,1.0,0.1,0.1,0
+WF-2026-002-escalated,1.0,1.0,0.4,1
+WF-2026-003-created,1.0,0.1,0.1,0
+WF-2026-003-escalated,1.0,1.0,0.4,1
+WF-2026-004-created,1.0,0.1,0.1,0
+WF-2026-004-escalated,1.0,1.0,0.4,1
+WF-2026-005-created,1.0,0.1,0.1,0
+WF-2026-005-escalated,1.0,1.0,0.4,1
+WF-2026-006-created,1.0,0.1,0.1,0
+WF-2026-006-escalated,1.0,1.0,0.3,1
+WF-2026-007-created,1.0,0.1,0.1,0
+WF-2026-007-escalated,1.0,1.0,0.4,1

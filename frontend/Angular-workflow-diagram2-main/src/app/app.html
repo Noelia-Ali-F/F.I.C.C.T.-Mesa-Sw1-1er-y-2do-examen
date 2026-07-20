@@ -1,0 +1,173 @@
+<div class="app-shell relative min-h-screen flex overflow-hidden text-slate-900 selection:bg-teal-900/10">
+  @if (authService.currentUser(); as user) {
+    @if (isStandaloneRoute()) {
+      <main class="guest-shell w-full">
+        <router-outlet />
+      </main>
+    } @else {
+      <!-- Premium Forest Dark Teal Sidebar -->
+      <aside class="app-sidebar" [class.is-compact]="sidebarCompact()" [class.is-open]="sidebarOpen()">
+        <div class="sidebar-header">
+          <div class="sidebar-brand" routerLink="/">
+            <div class="brand-mark">
+              <span>WF</span>
+            </div>
+            <div class="brand-info">
+              <span class="brand-name">WORKFLOW</span>
+              <span class="brand-tag">PREMIUM CORE</span>
+            </div>
+          </div>
+          <button class="sidebar-toggle-btn" (click)="isDesktopLayout() ? toggleSidebarCompact() : closeSidebar()">
+            <mat-icon fontSet="material-symbols-rounded">
+              {{ isDesktopLayout() ? (sidebarCompact() ? 'last_page' : 'first_page') : 'close' }}
+            </mat-icon>
+          </button>
+        </div>
+
+        <!-- Global Action Block: Nuevo Documento & Cargar Documento -->
+        <div class="sidebar-actions-wrapper" [class.is-compact]="sidebarCompact()">
+          <button routerLink="/documentos/editar/nuevo" class="sidebar-action-btn primary-action" title="Nuevo Documento">
+            <mat-icon fontSet="material-symbols-rounded">add</mat-icon>
+            <span>Nuevo Documento</span>
+          </button>
+          
+          <button routerLink="/documentos" [queryParams]="{ upload: 'true' }" class="sidebar-action-btn secondary-action" title="Cargar Documento">
+            <mat-icon fontSet="material-symbols-rounded">upload_file</mat-icon>
+            <span>Cargar Documento</span>
+          </button>
+        </div>
+
+        <nav class="sidebar-nav">
+          <div class="nav-section">
+            <span class="nav-section-title">Principal</span>
+            @for (item of primaryNavItems(); track item.route) {
+              <a [routerLink]="item.route" class="sidebar-link" [class.is-active]="isRouteActive(item.route)" [title]="item.label">
+                <mat-icon class="sidebar-link-icon" fontSet="material-symbols-rounded">{{ item.icon }}</mat-icon>
+                <span class="sidebar-link-label">{{ item.label }}</span>
+              </a>
+            }
+          </div>
+
+          <div class="nav-section">
+            <span class="nav-section-title">Herramientas</span>
+            @for (item of toolsNavItems(); track item.route) {
+              <a [routerLink]="item.route" [target]="item.route === '/bpmn-workspace' ? '_blank' : undefined" class="sidebar-link" [class.is-active]="isRouteActive(item.route)" [title]="item.label">
+                <mat-icon class="sidebar-link-icon" fontSet="material-symbols-rounded">{{ item.icon }}</mat-icon>
+                <span class="sidebar-link-label">{{ item.label }}</span>
+              </a>
+            }
+          </div>
+
+          @if (authService.currentUser()?.rol === 'ADMINISTRADOR') {
+            <div class="nav-section">
+              <span class="nav-section-title">Sistemas</span>
+              <a routerLink="/usuarios" class="sidebar-link" [class.is-active]="isRouteActive('/usuarios')" title="Usuarios">
+                <mat-icon class="sidebar-link-icon" fontSet="material-symbols-rounded">group</mat-icon>
+                <span class="sidebar-link-label">Usuarios</span>
+              </a>
+              <a routerLink="/departamentos" class="sidebar-link" [class.is-active]="isRouteActive('/departamentos')" title="Departamentos">
+                <mat-icon class="sidebar-link-icon" fontSet="material-symbols-rounded">account_tree</mat-icon>
+                <span class="sidebar-link-label">Departamentos</span>
+              </a>
+            </div>
+          }
+        </nav>
+
+        <!-- Sidebar footer: Connected presence and profile menu -->
+        <div class="sidebar-footer">
+          <div class="sidebar-footer-top">
+            <div class="sidebar-status-group" [class.is-compact]="sidebarCompact()">
+              <div class="presence-badge" [title]="totalOnlineSistema() + ' usuarios activos'">
+                <span class="presence-dot"></span>
+                @if (!sidebarCompact()) {
+                  <span class="presence-label">{{ totalOnlineSistema() }} Activos</span>
+                }
+              </div>
+              <app-notification-center />
+            </div>
+          </div>
+
+          <!-- User Profile trigger card -->
+          <div class="sidebar-profile-card" (click)="toggleProfileMenu()">
+            <div class="user-avatar">
+              @if (authService.getValidAvatar(user.avatarUrl); as avatarUrl) {
+                <img [src]="(avatarUrl.startsWith('http') || avatarUrl.startsWith('/icons/') ? avatarUrl : basePath + avatarUrl) + '?t=' + cacheBuster" [alt]="user.username" />
+              }
+            </div>
+            
+            <div class="user-meta" [class.is-compact]="sidebarCompact()">
+              <span class="user-name">{{ user.nombreCompleto || user.username }}</span>
+              <span class="user-role">{{ user.rol }}</span>
+            </div>
+            @if (!sidebarCompact()) {
+              <mat-icon class="profile-arrow" fontSet="material-symbols-rounded">expand_more</mat-icon>
+            }
+
+            <!-- Profile Menu Dropdown -->
+            @if (profileMenuOpen()) {
+              <div class="premium-dropdown animate-fade-in" (click)="$event.stopPropagation()">
+                <div class="dropdown-header">
+                  <p class="dropdown-username">{{ user.username }}</p>
+                  <p class="dropdown-dept">{{ user.departamento }}</p>
+                </div>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-btn logout" (click)="logout()">
+                  <mat-icon fontSet="material-symbols-rounded">logout</mat-icon>
+                  <span>Cerrar sesión</span>
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content Area -->
+      <div class="main-container">
+        @if (!isFullBleedRoute() || !isDesktopLayout()) {
+          <header class="app-global-header" [class.is-full-bleed-header]="isFullBleedRoute()">
+            <div class="header-left">
+              @if (!sidebarOpen() && !isDesktopLayout()) {
+                <button class="mobile-sidebar-toggle-btn" (click)="toggleSidebar()" aria-label="Abrir menú">
+                  <mat-icon fontSet="material-symbols-rounded">menu</mat-icon>
+                </button>
+              }
+              <h1 class="header-route-title"><span>{{ currentRouteTitle() }}</span></h1>
+            </div>
+            @if (!isFullBleedRoute()) {
+              <div class="header-right">
+                @if (showOnlineUsersWidget()) {
+                  <app-online-users-widget [users]="onlineUsersForWidget()" [totalOnline]="totalOnlineSistema()" />
+                }
+              </div>
+            }
+          </header>
+        }
+        <!-- Main Content Wrapper -->
+        <main class="content-wrapper" [class.is-full-bleed]="isFullBleedRoute()">
+          @if (sidebarOpen() && !isDesktopLayout()) {
+            <div class="mobile-sidebar-overlay" (click)="closeSidebar()"></div>
+          }
+          <div class="page-container">
+            <router-outlet />
+          </div>
+        </main>
+      </div>
+    }
+  } @else {
+    <main class="guest-shell w-full">
+      <router-outlet />
+    </main>
+  }
+
+  @if (showWidgetDock()) {
+    <div class="widget-dock" role="complementary">
+      @if (showChatWidget()) {
+        @defer (on idle) {
+          <app-chat-widget />
+        }
+      }
+    </div>
+  }
+  <app-pwa-install-banner />
+</div>
+

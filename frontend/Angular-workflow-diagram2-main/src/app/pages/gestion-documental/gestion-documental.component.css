@@ -1,0 +1,201 @@
+/* ── Document Management (DMS) Component Premium Styles ── */
+
+:host {
+  display: block;
+}
+
+/* Custom select dropdown styling */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+  background-position: right 0.65rem center;
+  background-repeat: no-repeat;
+  background-size: 1.15rem;
+  padding-right: 2rem !important;
+  transition: all 0.2s var(--ease-smooth);
+}
+
+select:focus {
+  border-color: var(--theme-primary-color) !important;
+  box-shadow: 0 0 0 2px var(--theme-primary-light-color);
+}
+
+/* ── KPI Telemetry Bar ── */
+.telemetry-card {
+  background-color: var(--theme-surface-color);
+  border: 1px solid var(--theme-element-border-color);
+  border-radius: 1.25rem;
+  padding: 1.125rem;
+  box-shadow: var(--theme-shadow-sm);
+  transition: all 0.3s var(--ease-smooth);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.telemetry-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--theme-shadow-md);
+  border-color: rgba(15, 118, 110, 0.15);
+}
+
+.telemetry-icon-box {
+  height: 2.25rem;
+  width: 2.25rem;
+  border-radius: 0.75rem;
+  background-color: var(--theme-surface-hover-color);
+  border: 1px solid var(--theme-element-border-color);
+  color: var(--theme-slate-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.telemetry-icon-box.teal {
+  background-color: var(--theme-primary-light-color);
+  border-color: rgba(15, 118, 110, 0.12);
+  color: var(--theme-primary-color);
+}
+
+.telemetry-icon-box.indigo {
+  background-color: rgba(79, 70, 229, 0.05);
+  border-color: rgba(79, 70, 229, 0.12);
+  color: #4f46e5;
+}
+
+.telemetry-icon-box.rose {
+  background-color: rgba(225, 29, 72, 0.05);
+  border-color: rgba(225, 29, 72, 0.12);
+  color: #e11d48;
+}
+
+/* ── Segmented Catalog Tabs ── */
+.tab-pill-bar {
+  display: flex;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--theme-element-border-color);
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.tab-pill-btn {
+  padding: 0.75rem 1.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid transparent;
+  color: var(--theme-slate-500);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.25s var(--ease-smooth);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+}
+
+.tab-pill-btn:hover {
+  color: var(--theme-border-text-color);
+  background-color: rgba(13, 148, 136, 0.02);
+}
+
+.tab-pill-btn.is-active {
+  border-bottom-color: var(--theme-primary-color);
+  color: var(--theme-primary-color);
+  font-weight: 800;
+  background-color: var(--theme-primary-light-color);
+}
+
+.tab-pill-btn.is-active.danger-tab {
+  border-bottom-color: #ef4444;
+  color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.05);
+}
+
+/* ── Document Item Cards ── */
+.doc-item-card {
+  background-color: var(--theme-surface-color);
+  border: 1px solid var(--theme-element-border-color);
+  border-radius: 1.25rem;
+  padding: 1rem;
+  box-shadow: var(--theme-shadow-sm);
+  transition: all 0.25s var(--ease-smooth);
+  cursor: pointer;
+  display: flex;
+  gap: 1rem;
+  align-items: start;
+}
+
+.doc-item-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--theme-shadow-md);
+  border-color: rgba(15, 118, 110, 0.2);
+}
+
+.doc-item-card.is-selected {
+  border-color: var(--theme-primary-color);
+  background-color: var(--theme-primary-light-color);
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.04);
+}
+
+/* ── Metadata & Control Inspector ── */
+.inspector-sticky-card {
+  background-color: var(--theme-surface-color);
+  border: 1px solid var(--theme-element-border-color);
+  border-radius: 1.25rem;
+  box-shadow: var(--theme-shadow-sm);
+  position: sticky;
+  top: 1.5rem;
+  overflow: hidden;
+  transition: all 0.3s var(--ease-smooth);
+}
+
+.inspector-sticky-card:hover {
+  border-color: rgba(15, 118, 110, 0.15);
+  box-shadow: var(--theme-shadow-md);
+}
+
+.property-grid-card {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+  background-color: var(--theme-surface-light-color);
+  border: 1px solid var(--theme-element-border-color);
+  padding: 1rem;
+  border-radius: 0.75rem;
+}
+
+.version-deck {
+  background-color: var(--theme-surface-light-color);
+  border: 1px solid var(--theme-element-border-color);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.danger-zone-alert {
+  background-color: rgba(239, 68, 68, 0.02);
+  border: 1px dashed rgba(239, 68, 68, 0.25);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* Material icons centering helper */
+mat-icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+}

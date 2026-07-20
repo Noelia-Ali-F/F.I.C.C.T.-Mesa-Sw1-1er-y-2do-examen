@@ -1,0 +1,25 @@
+<div class="wf-layout-main wf-fade-in-section space-y-6">
+  <app-page-section title="Estados del flujo" subtitle="CLICK PARA FILTRAR REGISTROS" icon="analytics">
+    <div class="wf-state-grid">
+      @for (estado of estadosFlujo; track estado) {
+        <button
+          type="button"
+          class="wf-state-chip-v2"
+          [class.wf-state-chip-active]="filtroEstado === estado"
+          (click)="estadoToggled.emit(estado)">
+          <span class="wf-state-chip-v2__name">{{ etiquetaEstado(estado) }}</span>
+          <span class="wf-state-chip-v2__count">{{ contadoresEstado[estado] }}</span>
+        </button>
+      }
+    </div>
+  </app-page-section>
+
+  <div class="hidden sm:block">
+    <app-page-section title="Mapa operativo" subtitle="NAVEGA POR NODOS Y TRANSICIONES" icon="map">
+      <app-workflow-diagram
+        [stats]="stats"
+        [config]="diagramConfig"
+        (selectionEnded)="selectionEnded.emit($event)" />
+    </app-page-section>
+  </div>
+</div>

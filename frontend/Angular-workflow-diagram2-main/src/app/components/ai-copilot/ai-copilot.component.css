@@ -1,0 +1,59 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   AI COPILOT PANEL — Styles (Modernized Emerald-Teal Theme)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.copilot-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #ffffff;
+  color: #1e293b;
+  font-family: inherit;
+  overflow: hidden;
+}
+
+/* Tabs and Buttons */
+.copilot-tab.tab-active {
+  background: #ffffff !important;
+  color: var(--theme-primary-color) !important; /* Teal 700 */
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* SVGs and Rings */
+.pulse-ring-fill {
+  transition: stroke-dashoffset 1s ease-out, stroke 0.5s;
+}
+.pulse-ring-fill.ring-critical { stroke: #f43f5e; } /* Rose 500 */
+.pulse-ring-fill.ring-warning { stroke: #f59e0b; } /* Amber 500 */
+.pulse-ring-fill.ring-good { stroke: #10b981; }    /* Emerald 500 */
+
+/* Custom transitions and scrollbars */
+.copilot-content::-webkit-scrollbar {
+  width: 5px;
+}
+.copilot-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+.copilot-content::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+.copilot-content::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Animation helpers */
+.neural-active {
+  animation: pulse-glow 1.5s infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}

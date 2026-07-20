@@ -1,0 +1,122 @@
+<!-- Floating Container -->
+<div class="fixed bottom-[88px] right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end gap-3">
+
+  @if (isOpen()) {
+    <div class="relative flex flex-col w-[calc(100vw-32px)] sm:w-[400px] h-[60vh] sm:h-[70vh] max-h-[750px] min-h-[400px] border border-slate-200/80 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl transition-all duration-300 overflow-hidden animate-fade-in">
+      
+      <!-- Top Window Title Bar (Gradient Teal to Slate) -->
+      <div class="flex items-center justify-between p-4 bg-gradient-to-r from-[#0F766E] to-[#0D9488] text-white shrink-0">
+        <div class="flex items-center gap-2">
+          <div class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-200 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+          </div>
+          <span class="text-xs font-bold tracking-wider uppercase">Copiloto Inteligente IA</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <button (click)="expandirChat()" class="text-[9px] font-bold tracking-wider bg-white/10 hover:bg-white/20 transition px-2.5 py-1 rounded-full uppercase" title="Abrir asistente completo">
+            Asistente Completo
+          </button>
+          <button (click)="toggleChat()" class="text-white/80 hover:text-white transition text-xl font-bold flex items-center justify-center leading-none p-1">&times;</button>
+        </div>
+      </div>
+
+      <!-- Main Direct Chat Stream -->
+      <div class="flex-1 min-h-0 bg-slate-50/50 relative flex flex-col p-4 overflow-y-auto gap-4" #chatScroll>
+        @for (msg of chatMessages(); track msg.id) {
+          <div class="flex flex-col max-w-[85%]" 
+               [class.self-end]="!msg.isAi" 
+               [class.self-start]="msg.isAi">
+            
+            <div class="p-3.5 rounded-2xl text-xs leading-relaxed shadow-sm font-medium"
+                 [ngClass]="{
+                   'bg-teal-600 text-white rounded-tr-none': !msg.isAi,
+                   'bg-white text-slate-800 border border-slate-100 rounded-tl-none': msg.isAi && msg.kind !== 'error' && msg.kind !== 'success',
+                   'bg-rose-50 text-rose-950 border border-rose-100 rounded-tl-none': msg.kind === 'error',
+                   'bg-emerald-50 text-emerald-950 border border-emerald-100 rounded-tl-none': msg.kind === 'success'
+                 }">
+              <p class="whitespace-pre-wrap font-sans">{{ msg.text }}</p>
+            </div>
+            
+            <span class="text-[8px] font-semibold text-slate-400 mt-1 px-1 uppercase tracking-wider" 
+                  [class.text-right]="!msg.isAi">
+              {{ msg.isAi ? 'COPILOT IA' : 'TÚ' }} &bull; {{ msg.time | date:'HH:mm' }}
+            </span>
+          </div>
+        }
+
+        <!-- Thinking Loader -->
+        @if (isThinking()) {
+          <div class="flex flex-col max-w-[85%] self-start animate-pulse">
+            <div class="p-3.5 bg-slate-100 border border-slate-200 text-slate-600 text-xs font-semibold rounded-2xl rounded-tl-none shadow-sm flex items-center gap-2">
+              <span class="flex h-2 w-2 relative">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-teal-600"></span>
+              </span>
+              <span>Procesando consulta técnica...</span>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Chat Bottom Input Console -->
+      <div class="p-3 bg-white border-t border-slate-100 shrink-0">
+        <div class="flex gap-2 items-center">
+          <input 
+            type="text" 
+            [(ngModel)]="currentInput"
+            (keyup.enter)="enviarMensaje()"
+            [disabled]="isThinking()"
+            placeholder="Escribe una pregunta o comando..." 
+            class="flex-1 border border-slate-200 bg-slate-50 px-4 py-2.5 rounded-full text-xs font-medium focus:outline-none focus:border-teal-500 focus:bg-white transition-all disabled:opacity-50 placeholder:text-slate-400" />
+          
+          <!-- Isolated Voice Recording Microphone Button -->
+          <button 
+            type="button"
+            (click)="toggleVoiceChat()" 
+            [disabled]="isThinking()"
+            [class.bg-rose-500]="voiceService.isListening()"
+            [class.text-white]="voiceService.isListening()"
+            [class.border-rose-600]="voiceService.isListening()"
+            [class.animate-pulse]="voiceService.isListening()"
+            [class.bg-slate-100]="!voiceService.isListening()"
+            [class.text-slate-600]="!voiceService.isListening()"
+            [class.border-slate-200]="!voiceService.isListening()"
+            [class.hover:bg-slate-200]="!voiceService.isListening()"
+            class="h-9 w-9 flex items-center justify-center rounded-full border transition-all duration-200 shadow-sm hover:shadow active:scale-95 cursor-pointer"
+            [title]="voiceService.isListening() ? 'Detener dictado' : 'Dictar mensaje'">
+            <mat-icon fontSet="material-symbols-rounded" class="!text-sm">
+              {{ voiceService.isListening() ? 'mic_off' : 'mic' }}
+            </mat-icon>
+          </button>
+
+          <button 
+            (click)="enviarMensaje()" 
+            [disabled]="isThinking() || !currentInput().trim()"
+            class="h-9 w-9 flex items-center justify-center rounded-full bg-teal-600 hover:bg-teal-700 text-white transition-all duration-200 disabled:opacity-30 shadow-md hover:shadow-lg active:scale-95 cursor-pointer">
+            <mat-icon fontSet="material-symbols-rounded" class="!text-sm">send</mat-icon>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  }
+
+  <!-- Floating Toggle Button (Sleek Rounded pill button with gradient glow) -->
+  <button 
+    (click)="toggleChat()"
+    class="relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-teal-700 to-teal-500 text-white shadow-lg shadow-teal-700/20 hover:shadow-xl hover:shadow-teal-600/30 transition-all duration-300 hover:scale-105 active:scale-95 group">
+    
+    <!-- Pulse glow animation -->
+    <span class="absolute inset-0 rounded-full bg-teal-500 blur-md opacity-25 group-hover:opacity-40 transition-opacity"></span>
+    
+    <mat-icon fontSet="material-symbols-rounded" class="!text-2xl relative z-10 transition-transform group-hover:rotate-12">smart_toy</mat-icon>
+    
+    @if (!isOpen()) {
+      <span class="absolute top-0.5 right-0.5 flex h-3.5 w-3.5">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white"></span>
+      </span>
+    }
+  </button>
+</div>

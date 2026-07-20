@@ -1,0 +1,64 @@
+/* ── Detalle Solicitud Premium Styles ── */
+
+:host {
+  display: block;
+  background-color: #f8fafc;
+  min-height: 100vh;
+}
+
+/* Base animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-pulse {
+  animation: pulse-soft 2s infinite ease-in-out;
+}
+
+/* Custom styling for drop-down lists */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.25rem;
+  padding-right: 2.25rem !important;
+}
+
+/* Timeline dot highlight interactions */
+.group:hover .absolute.z-10 {
+  transform: scale(1.15);
+  border-color: #0d9488 !important;
+  box-shadow: 0 0 8px rgba(13, 148, 136, 0.25);
+}
+
+/* Responsive transitions for predictive progress bars */
+.transition-all {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Perfect centering for all material icons inside this component */
+mat-icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+  width: 1em !important;
+  height: 1em !important;
+}

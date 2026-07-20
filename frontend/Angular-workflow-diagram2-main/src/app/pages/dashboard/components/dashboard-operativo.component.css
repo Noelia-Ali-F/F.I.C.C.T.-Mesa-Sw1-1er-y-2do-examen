@@ -1,0 +1,108 @@
+/* ── Premium Improved Dashboard Operativo ── */
+
+:host {
+  display: block;
+}
+
+.wf-layout-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.wf-panel {
+  border: 1px solid rgba(15, 118, 110, 0.08);
+  border-radius: 1.25rem;
+  background: #ffffff;
+  box-shadow: 0 20px 40px -36px rgba(15, 118, 110, 0.12);
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wf-panel:hover {
+  box-shadow: 0 28px 50px -32px rgba(15, 118, 110, 0.18);
+}
+
+.wf-panel--diagram {
+  min-height: 28rem;
+  background-color: #FAFAFA;
+}
+
+/* ── Interactive Workflow State Grid ── */
+.wf-state-grid {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 768px) {
+  .wf-state-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.wf-state-chip-v2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.2rem;
+  background: #ffffff;
+  border: 1px solid rgba(15, 118, 110, 0.08);
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.02);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.wf-state-chip-v2:hover {
+  border-color: rgba(13, 148, 136, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -12px rgba(15, 118, 110, 0.15);
+  background: #ffffff;
+}
+
+.wf-state-chip-v2__name {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--theme-slate-500);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.wf-state-chip-v2__count {
+  font-size: 1.15rem;
+  line-height: 1;
+  font-weight: 800;
+  color: var(--theme-primary-color);
+  font-variant-numeric: tabular-nums;
+}
+
+.wf-state-chip-active {
+  border-color: var(--theme-primary-color) !important;
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.04), #ffffff) !important;
+  box-shadow: 0 16px 28px -18px rgba(15, 118, 110, 0.25) !important;
+}
+
+.wf-state-chip-active .wf-state-chip-v2__name {
+  color: var(--theme-primary-color) !important;
+}
+
+.wf-state-chip-active .wf-state-chip-v2__count {
+  color: #D97706 !important;
+}
+
+.wf-fade-in-section {
+  animation: wf-fade-in 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes wf-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

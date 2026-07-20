@@ -1,0 +1,1049 @@
+<div class="dms-viewport" (mousemove)="onMouseMove($event)">
+  <!-- TOP BAR Header (Modern, clean, project-branded) -->
+  <header class="dms-header">
+    <div class="header-left" style="display: flex; align-items: center; gap: 16px;">
+      <!-- Volver Button -->
+      <button (click)="salir()" class="dms-back-btn" title="Volver al Listado">
+        <mat-icon fontSet="material-symbols-rounded">arrow_back</mat-icon>
+      </button>
+
+      <!-- AI Copilot Trigger -->
+      <button (click)="showAiCopilot.set(!showAiCopilot())" class="ai-trigger-btn" [class.active]="showAiCopilot()"
+        title="Activar Copiloto">
+        <mat-icon fontSet="material-symbols-rounded"
+          [class.animate-pulse]="voiceService.isListening()">smart_toy</mat-icon>
+        <span>COPILOT</span>
+      </button>
+      <div>
+        <div class="doc-title-info">
+          @if (cargando()) {
+          <div class="skeleton title-skeleton"></div>
+          <div class="skeleton meta-skeleton"></div>
+          } @else {
+          <h1>{{ documento()?.nombre }}</h1>
+          <p class="meta-label">
+            MODO: {{ estaBloqueadoPorMi() ? 'EDICIÓN EXCLUSIVA' : 'SÓLO LECTURA' }} • v{{ documento()?.versionActual }} • {{ documento()?.estado || 'BORRADOR' }}
+          </p>
+          }
+        </div>
+      </div>
+      <!-- Peer Avatars showing who is editing/viewing in real time -->
+      @if (activePeersList().length > 0) {
+      <div class="collab-container">
+        <span class="collab-label">Colaboradores:</span>
+        <div class="avatar-stack">
+          @for (peer of activePeersList(); track peer.username) {
+          <div [title]="peer.username" class="avatar-badge">
+            {{ peer.username.substring(0, 2).toUpperCase() }}
+          </div>
+          }
+        </div>
+      </div>
+      }
+    </div>
+
+    <!-- Right Header actions (Save, Drawers triggers, Close) -->
+    <div class="header-right" style="display: flex; align-items: center; gap: 8px;">
+      @if ((documento()?.estado || 'BORRADOR') === 'BORRADOR' || documento()?.estado === 'RECHAZADO') {
+      <button class="icon-action-btn" [disabled]="procesandoAprobacion()" (click)="cambiarAprobacion('ENVIAR')" title="Enviar a aprobación">
+        <mat-icon fontSet="material-symbols-rounded">outbox</mat-icon><span>Enviar</span>
+      </button>
+      }
+      @if (documento()?.estado === 'PENDIENTE_APROBACION' && puedeDecidirAprobacion()) {
+      <button class="icon-action-btn" [disabled]="procesandoAprobacion()" (click)="cambiarAprobacion('APROBAR')" title="Aprobar documento">
+        <mat-icon fontSet="material-symbols-rounded">verified</mat-icon><span>Aprobar</span>
+      </button>
+      <button class="icon-action-btn" [disabled]="procesandoAprobacion()" (click)="cambiarAprobacion('RECHAZAR')" title="Rechazar documento">
+        <mat-icon fontSet="material-symbols-rounded">cancel</mat-icon><span>Rechazar</span>
+      </button>
+      }
+
+      <!-- 1. Detalles Trigger -->
+      <button
+        (click)="showInfo.set(!showInfo()); showHistory.set(false); showComments.set(false); showWorkflow.set(false); showCollab.set(false);"
+        [class.active]="showInfo()" class="icon-action-btn" title="Propiedades del documento">
+        <mat-icon fontSet="material-symbols-rounded">info</mat-icon>
+        <span>Detalles</span>
+      </button>
+
+      <!-- 2. Workflow Synergy Trigger -->
+      <button
+        (click)="showWorkflow.set(!showWorkflow()); showInfo.set(false); showHistory.set(false); showComments.set(false); showCollab.set(false);"
+        [class.active]="showWorkflow()" class="icon-action-btn" title="Sinergia con Workflow">
+        <mat-icon fontSet="material-symbols-rounded">account_tree</mat-icon>
+        <span>Workflow</span>
+      </button>
+
+      <!-- 3. Colaboradores Presence Trigger -->
+      <button
+        (click)="showCollab.set(!showCollab()); showInfo.set(false); showHistory.set(false); showComments.set(false); showWorkflow.set(false);"
+        [class.active]="showCollab()" class="icon-action-btn" title="Colaboradores y presencia en tiempo real">
+        <mat-icon fontSet="material-symbols-rounded">people</mat-icon>
+        <span>Equipo</span>
+      </button>
+
+      <!-- 4. Versiones Triggers -->
+      <button
+        (click)="showHistory.set(!showHistory()); showInfo.set(false); showComments.set(false); showWorkflow.set(false); showCollab.set(false);"
+        [class.active]="showHistory()" class="icon-action-btn" title="Historial de Versiones">
+        <mat-icon fontSet="material-symbols-rounded">history</mat-icon>
+        <span>Versiones</span>
+      </button>
+
+      <!-- 5. Chat Trigger -->
+      <button
+        (click)="showComments.set(!showComments()); showInfo.set(false); showHistory.set(false); showWorkflow.set(false); showCollab.set(false);"
+        [class.active]="showComments()" class="icon-action-btn" title="Chat y Foro del Documento">
+        <mat-icon fontSet="material-symbols-rounded">forum</mat-icon>
+        <span>Chat</span>
+        @if (comments().length > 0) {
+        <span class="chat-badge">{{ comments().length }}</span>
+        }
+      </button>
+
+      <span class="divider"></span>
+
+      @if (!cargando() && estaBloqueadoPorMi()) {
+      <button (click)="guardarBorrador()" [disabled]="guardando()" class="dms-btn secondary">
+        @if (guardando()) {
+        <span class="spinner-inline"></span>
+        <span>Guardando...</span>
+        } @else {
+        <mat-icon fontSet="material-symbols-rounded">save</mat-icon>
+        <span>Guardar</span>
+        }
+      </button>
+      <button (click)="abrirModalSnapshot()" class="dms-btn primary">
+        <mat-icon fontSet="material-symbols-rounded">publish</mat-icon>
+        <span>Publicar Snapshot</span>
+      </button>
+      }
+
+      <button (click)="salir()" class="dms-btn danger-outline">
+        <mat-icon fontSet="material-symbols-rounded">close</mat-icon>
+        <span>Cerrar</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- DRAWER 0: AI COPILOT (LEFT) -->
+  <aside class="dms-drawer left-drawer" [class.drawer-open]="showAiCopilot()">
+    <div class="drawer-header">
+      <div class="drawer-header-title">
+        <mat-icon fontSet="material-symbols-rounded" style="color: #6b21a8;">smart_toy</mat-icon>
+        <h2>Asistente</h2>
+      </div>
+      <button (click)="showAiCopilot.set(false)" class="close-drawer-btn">
+        <mat-icon fontSet="material-symbols-rounded">close</mat-icon>
+      </button>
+    </div>
+
+    <div class="ai-copilot-body">
+      <!-- Chat history list -->
+      <div class="ai-chat-area">
+        @for (msg of aiMessages(); track $index) {
+        <div class="ai-msg-card animate-fade-in" [ngClass]="msg.sender === 'user' ? 'user-msg' : 'assistant-msg'">
+
+          <div class="ai-msg-header">
+            <div class="ai-msg-header-left">
+              <mat-icon fontSet="material-symbols-rounded"
+                [style.color]="msg.sender === 'user' ? 'var(--theme-primary-color)' : '#7e22ce'">
+                {{ msg.sender === 'user' ? 'person' : 'smart_toy' }}
+              </mat-icon>
+              <span>{{ msg.sender === 'user' ? 'Tú (Redactor)' : 'Asistente local' }}</span>
+            </div>
+            <span>{{ msg.timestamp | date:'HH:mm:ss' }}</span>
+          </div>
+
+          <!-- Message content -->
+          <div class="ai-msg-body" [innerHTML]="msg.text"></div>
+
+          <!-- Context Actions for AI generated content -->
+          @if (msg.sender === 'assistant' && !msg.loading) {
+          <div class="ai-msg-actions">
+            <button (click)="insertHtmlAtCursor(msg.text)" class="ai-action-sub-btn insert-btn"
+              title="Insertar en la posición actual del cursor">
+              <mat-icon fontSet="material-symbols-rounded">arrow_forward</mat-icon>
+              Insertar Texto
+            </button>
+            <button (click)="replaceDocumentWithHtml(msg.text)" class="ai-action-sub-btn replace-btn"
+              title="Reemplazar todo el lienzo con este texto">
+              <mat-icon fontSet="material-symbols-rounded">find_replace</mat-icon>
+              Reemplazar Todo
+            </button>
+            <button (click)="copyToClipboard(msg.text)" class="ai-action-sub-btn copy-btn">
+              <mat-icon fontSet="material-symbols-rounded">content_copy</mat-icon>
+              Copiar
+            </button>
+          </div>
+
+          <!-- Rendered Mermaid Diagram Area -->
+          @if (renderedMermaidDiagrams()[$index]) {
+            <div style="margin-top: 10px; border: 2px solid #0f172a; background: #fff; padding: 8px; box-shadow: 2px 2px 0 0 #0f172a; display: flex; flex-direction: column; gap: 8px;" class="animate-fade-in">
+              <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1.5px solid #0f172a; padding-bottom: 4px; margin-bottom: 4px;">
+                <span style="font-size: 8px; font-weight: 900; text-transform: uppercase; color: #0f172a; display: flex; align-items: center; gap: 3px;">
+                  <mat-icon fontSet="material-symbols-rounded" style="font-size: 11px; width: 11px; height: 11px; line-height: 11px; color: #4f46e5;">account_tree</mat-icon>
+                  Diagrama de Flujo Renderizado (Mermaid)
+                </span>
+              </div>
+              <div [innerHTML]="sanitizer.bypassSecurityTrustHtml(renderedMermaidDiagrams()[$index])" style="overflow-x: auto; display: flex; justify-content: center; max-height: 250px; background: #fafafa; border: 1px solid #e2e8f0; padding: 6px;"></div>
+              
+              <div style="display: flex; gap: 4px;">
+                <button (click)="insertMermaidInDocument($index)" class="ai-action-sub-btn insert-btn"
+                  style="font-size: 8px; font-weight: 900; text-transform: uppercase; padding: 3px 5px; cursor: pointer; display: inline-flex; align-items: center; gap: 2px;"
+                  title="Insertar el flujo directamente en el documento">
+                  <mat-icon fontSet="material-symbols-rounded">arrow_forward</mat-icon>
+                  Insertar Flujo
+                </button>
+                <button (click)="downloadMermaidSvg($index)" class="ai-action-sub-btn copy-btn"
+                  style="font-size: 8px; font-weight: 900; text-transform: uppercase; padding: 3px 5px; cursor: pointer; display: inline-flex; align-items: center; gap: 2px;"
+                  title="Descargar diagrama como imagen vectorial SVG">
+                  <mat-icon fontSet="material-symbols-rounded">download</mat-icon>
+                  Descargar SVG
+                </button>
+              </div>
+            </div>
+          }
+          }
+        </div>
+        }
+ 
+        <!-- Live Transcript Preview -->
+        @if (voiceService.isListening() || voiceService.transcript() || voiceService.getInterim()) {
+        <div class="ai-transcript-box animate-fade-in">
+          <p class="ai-transcript-header">
+            <mat-icon fontSet="material-symbols-rounded" [class.animate-pulse]="voiceService.isListening()">mic</mat-icon> Dictado Activo
+          </p>
+          <p class="ai-transcript-text">
+            {{ voiceService.transcript() }}
+            <span class="ai-transcript-interim">{{ voiceService.getInterim() }}</span>
+          </p>
+        </div>
+        }
+      </div>
+ 
+      <!-- Quick Actions -->
+      <div class="ai-quick-actions-row">
+        <button class="ai-quick-btn"
+          (click)="askAi('Genera un resumen ejecutivo de este documento considerando su etapa actual de workflow.')">Resumir
+          Doc</button>
+        <button class="ai-quick-btn"
+          (click)="askAi('Corrige la ortografía de mi texto y mejora su redacción.')">Corregir</button>
+        <button class="ai-quick-btn"
+          (click)="askAi('Crea una tabla con las tareas clave y responsables de este proceso.')">Tabla Tareas</button>
+        <button class="ai-quick-btn"
+          (click)="askAi('Genera un diagrama de flujo en imagen representando el flujo actual.')">Diagrama
+          Flujo</button>
+      </div>
+ 
+      <!-- Input Area -->
+      <div class="ai-input-area">
+        <textarea [(ngModel)]="aiInputText" class="ai-textarea" placeholder="Pídele al Asistente de IA o dictame..."
+          (keyup.enter)="$event.preventDefault(); askAi(aiInputText()); aiInputText.set(''); voiceService.clear();"></textarea>
+ 
+        <div class="ai-btn-row">
+          <button (click)="voiceService.isListening() ? voiceService.stop() : voiceService.start()" class="ai-speak-btn"
+            [ngClass]="voiceService.isListening() ? 'listening' : 'idle'">
+            <mat-icon fontSet="material-symbols-rounded">{{ voiceService.isListening() ? 'mic_off' : 'mic' }}</mat-icon>
+            {{ voiceService.isListening() ? 'Detener' : 'Hablar' }}
+          </button>
+ 
+          <button (click)="askAi(aiInputText()); aiInputText.set(''); voiceService.clear();" class="ai-send-btn">
+            <mat-icon fontSet="material-symbols-rounded">send</mat-icon>
+            Enviar
+          </button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- DRAWER 1: DETALLES BÁSICOS -->
+  <aside class="dms-drawer right-drawer" [class.drawer-open]="showInfo()">
+    <div class="drawer-header">
+      <div class="drawer-header-title">
+        <mat-icon fontSet="material-symbols-rounded">info</mat-icon>
+        <h2>Propiedades del Documento</h2>
+      </div>
+      <button (click)="showInfo.set(false)" class="close-drawer-btn">
+        <mat-icon fontSet="material-symbols-rounded">close</mat-icon>
+      </button>
+    </div>
+
+    <div class="drawer-body" style="gap: 2rem; padding: 2rem 1.5rem;">
+      <!-- Block 1: Detalles Básicos -->
+      <div class="space-y-4">
+        <span class="stat-label block border-b border-slate-200 pb-1.5"
+          style="font-size: 0.7rem; letter-spacing: 0.1em; font-weight: 800;">Detalles del Archivo</span>
+
+        <div class="popover-stat-item">
+          <span class="stat-label">Tipo de Archivo</span>
+          <span class="stat-val text-slate-900">Edición Colaborativa</span>
+        </div>
+        <div class="popover-stat-item">
+          <span class="stat-label">Creador Original</span>
+          <span class="stat-val font-black">{{ documento()?.creadoPor }}</span>
+        </div>
+        <div class="popover-stat-item">
+          <span class="stat-label">Fecha de Creación</span>
+          <span class="stat-val">{{ documento()?.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <div class="popover-stat-item">
+          <span class="stat-label">Última Modificación</span>
+          <span class="stat-val">{{ documento()?.fechaActualizacion | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <div class="popover-stat-item">
+          <span class="stat-label">Estado de aprobación</span>
+          <span class="stat-val font-black">{{ documento()?.estado || 'BORRADOR' }}</span>
+        </div>
+        @if (documento()?.aprobadoPor) {
+        <div class="popover-stat-item">
+          <span class="stat-label">Decidido por</span>
+          <span class="stat-val">{{ documento()?.aprobadoPor }} · {{ documento()?.fechaDecision | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <div class="popover-stat-item">
+          <span class="stat-label">Observación</span>
+          <span class="stat-val">{{ documento()?.observacionDecision || 'Sin observación' }}</span>
+        </div>
+        }
+        @if (documento()?.historialDecisiones?.length) {
+        <div class="space-y-2">
+          <span class="stat-label">Historial de decisiones</span>
+          @for (decision of documento()?.historialDecisiones; track decision.fecha) {
+          <div class="snapshot-comment">
+            {{ decision.estadoAnterior }} → {{ decision.estadoNuevo }} · {{ decision.usuario }} ·
+            {{ decision.fecha | date:'dd/MM/yyyy HH:mm' }} · {{ decision.observacion || 'Sin observación' }}
+          </div>
+          }
+        </div>
+        }
+      </div>
+
+      <!-- Block 2: Anexos / Relacionados -->
+      <div class="space-y-4">
+        <span class="stat-label block border-b border-slate-200 pb-1.5"
+          style="font-size: 0.7rem; letter-spacing: 0.1em; font-weight: 800;">Documentos Relacionados</span>
+
+        <div class="associated-docs-list" style="gap: 0.5rem;">
+          @if (associatedDocs().length === 0) {
+          <span class="empty-docs-text">No hay otros documentos anexados a esta etapa o solicitud.</span>
+          } @else {
+          @for (other of associatedDocs(); track other.id) {
+          <a [routerLink]="['/documentos/editar', other.id]" (click)="showInfo.set(false)" class="associated-doc-link">
+            <mat-icon fontSet="material-symbols-rounded">description</mat-icon>
+            <div class="doc-link-details">
+              <strong>{{ other.nombre }}</strong>
+              <span>v{{ other.versionActual }}</span>
+            </div>
+          </a>
+          }
+          }
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- DRAWER 2: WORKFLOW SYNERGY -->
+  <aside class="dms-drawer right-drawer" [class.drawer-open]="showWorkflow()">
+    <div class="drawer-header">
+      <div class="drawer-header-title">
+        <mat-icon fontSet="material-symbols-rounded">account_tree</mat-icon>
+        <h2>Sinergia con Workflow</h2>
+      </div>
+      <button (click)="showWorkflow.set(false)" class="close-drawer-btn">
+        <mat-icon fontSet="material-symbols-rounded">close</mat-icon>
+      </button>
+    </div>
+
+    <div class="drawer-body" style="gap: 2rem; padding: 2rem 1.5rem;">
+      <div class="space-y-4">
+        <span class="stat-label block border-b border-slate-200 pb-1.5"
+          style="font-size: 0.7rem; letter-spacing: 0.1em; font-weight: 800;">Vínculo del Proceso</span>
+
+        @if (documento()?.solicitudId && esEtapaBpmn(documento()!.solicitudId)) {
+        <div class="popover-stat-item compact">
+          <span class="stat-label">Etapa del Diagrama</span>
+          <span class="stat-val bpmn-badge-step">{{ nombreEtapaBpmn() }}</span>
+        </div>
+
+        <div class="wf-requests-subset pt-2">
+          <span class="stat-label block mb-2" style="font-size: 0.6rem; color: var(--theme-slate-500);">
+            Solicitudes activas en esta etapa ({{ workflowsEnEtapa().length }})
+          </span>
+          <div class="wf-requests-list" style="gap: 0.5rem;">
+            @if (workflowsEnEtapa().length === 0) {
+            <span class="empty-docs-text">No hay solicitudes físicas procesándose en esta etapa actualmente.</span>
+            } @else {
+            @for (wf of workflowsEnEtapa(); track wf.id) {
+            <a [routerLink]="['/detalle', wf.id]" target="_blank" class="associated-doc-link wf-request-link">
+              <mat-icon fontSet="material-symbols-rounded" class="text-teal-600">assignment</mat-icon>
+              <div class="doc-link-details">
+                <strong>{{ wf.codigoSeguimiento }}</strong>
+                <span class="title-truncate">{{ wf.titulo }}</span>
+              </div>
+              <span class="wf-mini-badge" [class]="wf.prioridad?.toLowerCase()">{{ wf.prioridad }}</span>
+            </a>
+            }
+            }
+          </div>
+        </div>
+        } @else if (solicitudFisica()) {
+        <div class="wf-physical-request-details space-y-4">
+          <div class="popover-stat-item compact" style="padding-bottom: 0.25rem;">
+            <span class="stat-label">Tipo de Enlace</span>
+            <span class="stat-val bpmn-badge-step" style="background-color: #0d9488; color: white;">Expediente
+              Único</span>
+          </div>
+
+          <a [routerLink]="['/detalle', solicitudFisica()!.id]" target="_blank"
+            class="associated-doc-link wf-request-link" style="display: flex;">
+            <mat-icon fontSet="material-symbols-rounded" class="text-teal-600">folder_open</mat-icon>
+            <div class="doc-link-details">
+              <strong>{{ solicitudFisica()!.codigoSeguimiento }}</strong>
+              <span class="title-truncate font-black">{{ solicitudFisica()!.titulo }}</span>
+            </div>
+            <span class="wf-mini-badge" [class]="solicitudFisica()!.prioridad?.toLowerCase()">{{
+              solicitudFisica()!.prioridad }}</span>
+          </a>
+
+          <div class="popover-stat-item compact">
+            <span class="stat-label">Estado Solicitud</span>
+            <span class="stat-val font-black">{{ solicitudFisica()!.estado }}</span>
+          </div>
+          <div class="popover-stat-item compact">
+            <span class="stat-label">Área / Depto</span>
+            <span class="stat-val">{{ solicitudFisica()!.departamentoActual }}</span>
+          </div>
+          @if (solicitudFisica()!.usuarioAsignado) {
+          <div class="popover-stat-item compact">
+            <span class="stat-label">Asignado a</span>
+            <span class="stat-val font-black text-teal-700">{{ solicitudFisica()!.usuarioAsignado }}</span>
+          </div>
+          }
+        </div>
+        } @else {
+        <span class="empty-docs-text">Este documento no se encuentra vinculado a ninguna etapa de proceso o solicitud
+          física.</span>
+        }
+      </div>
+    </div>
+  </aside>
+
+  <!-- DRAWER 3: EQUIPO Y COLABORADORES -->
+  <aside class="dms-drawer right-drawer" [class.drawer-open]="showCollab()">
+    <div class="drawer-header">
+      <div class="drawer-header-title">
+        <mat-icon fontSet="material-symbols-rounded">people</mat-icon>
+        <h2>Equipo de Colaboración</h2>
+      </div>
+      <button (click)="showCollab.set(false)" class="close-drawer-btn">
+        <mat-icon fontSet="material-symbols-rounded">close</mat-icon>
+      </button>
+    </div>
+
+    <div class="drawer-body" style="gap: 2rem; padding: 2rem 1.5rem;">
+      <div class="space-y-4">
+        <span class="stat-label block border-b border-slate-200 pb-1.5"
+          style="font-size: 0.7rem; letter-spacing: 0.1em; font-weight: 800;">Miembros y Roles</span>
+
+        <div class="collab-details-list" style="gap: 0.75rem;">
+          <div class="collab-detail-row">
+            <div class="collab-avatar-circle creator">{{ (documento()?.creadoPor || 'US').substring(0, 2).toUpperCase()
+              }}</div>
+            <div class="collab-name-info">
+              <span class="collab-name">{{ documento()?.creadoPor }}</span>
+              <span class="collab-role-desc">Autor Original</span>
+            </div>
+          </div>
+          @if (documento()?.bloqueadoPor) {
+          <div class="collab-detail-row">
+            <div class="collab-avatar-circle editor">{{ (documento()?.bloqueadoPor || 'ED').substring(0,
+              2).toUpperCase() }}</div>
+            <div class="collab-name-info">
+              <span class="collab-name">{{ documento()?.bloqueadoPor }}</span>
+              <span class="collab-role-desc">Editor Activo (Bloqueo)</span>
+            </div>
+          </div>
+          }
+          @if (activePeersList().length > 0) {
+          <div class="collab-peers-online pt-4 border-t border-slate-100">
+            <span class="stat-label block mb-2">Leyendo / Colaborando ahora:</span>
+            <div class="flex flex-wrap gap-2">
+              @for (peer of activePeersList(); track peer.username) {
+              <span class="peer-pill-online">
+                <span class="online-pulse-dot"></span>
+                {{ peer.username }}
+              </span>
+              }
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- ══════ INVITACIÓN DE COLABORADORES ══════ -->
+      <div class="space-y-3 pt-6 border-t border-slate-100" style="display: flex; flex-direction: column; gap: 0.75rem; border-top: 1px solid var(--theme-element-border-color); padding-top: 1.5rem;">
+        <span class="stat-label block" style="font-size: 0.7rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase; color: var(--theme-slate-500);">Invitar Colaboradores</span>
+        <p class="text-[10px] text-slate-450 font-semibold" style="font-size: 0.65rem; color: #64748b; line-height: 1.4; margin: 0;">
+          Selecciona un miembro del equipo para invitarlo a colaborar en tiempo real. Al invitarlo, se copiará el enlace en tu portapapeles y se enviará una notificación instantánea.
+        </p>
+        
+        <div class="space-y-2" style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 250px; overflow-y: auto; padding-right: 4px;">
+          @for (usuario of usuariosDisponibles(); track usuario.id) {
+            @if (usuario.username !== authService.currentUser()?.username) {
+              <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100/80 hover:bg-slate-100/50 transition-colors" style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.625rem; border-radius: 0.75rem; border: 1px solid var(--theme-element-border-color); background: #f8fafc; transition: all 0.2s;">
+                <div class="flex items-center gap-2 min-w-0" style="display: flex; align-items: center; gap: 0.5rem; min-width: 0; flex: 1;">
+                  <div class="h-6 w-6 rounded-full bg-slate-200 text-[10px] font-bold text-slate-600 flex items-center justify-center" style="height: 1.5rem; width: 1.5rem; border-radius: 9999px; background: #e2e8f0; color: #475569; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 700; flex-shrink: 0;">
+                    {{ usuario.username.substring(0, 2).toUpperCase() }}
+                  </div>
+                  <div class="min-w-0" style="min-width: 0; flex: 1;">
+                    <p class="text-xs font-bold text-slate-700 truncate" style="font-size: 0.75rem; font-weight: 700; color: #334155; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ usuario.nombreCompleto }}</p>
+                    <p class="text-[9px] font-semibold text-slate-450 uppercase tracking-wider truncate" style="font-size: 0.55rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ usuario.departamento || 'Sin Depto' }} • {{ usuario.rol }}</p>
+                  </div>
+                </div>
+                
+                <button 
+                  (click)="invitarColaborador(usuario.username)" 
+                  class="flex items-center justify-center px-2 py-1 text-[9px] font-black rounded-lg border transition cursor-pointer"
+                  [style.background]="invitacionEnviadaMap()[usuario.username] ? '#ecfdf5' : '#ffffff'"
+                  [style.border-color]="invitacionEnviadaMap()[usuario.username] ? '#a7f3d0' : 'var(--theme-element-border-color)'"
+                  [style.color]="invitacionEnviadaMap()[usuario.username] ? '#059669' : '#475569'"
+                  style="border-radius: 0.5rem; padding: 0.25rem 0.5rem; font-size: 0.6rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 0.25rem; transition: all 0.2s;"
+                >
+                  @if (invitacionEnviadaMap()[usuario.username]) {
+                    <mat-icon fontSet="material-symbols-rounded" class="!text-[10px]" style="font-size: 10px; height: 10px; width: 10px;">check_circle</mat-icon>
+                    <span>Copiado</span>
+                  } @else {
+                    <mat-icon fontSet="material-symbols-rounded" class="!text-[10px]" style="font-size: 10px; height: 10px; width: 10px;">person_add</mat-icon>
+                    <span>Invitar</span>
+                  }
+                </button>
+              </div>
+            }
+          } @empty {
+            <p class="text-[10px] text-slate-400 text-center py-4">No hay otros miembros disponibles</p>
+          }
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- Premium Floating Vertical Dock for Sidebar Drawers -->
+  <div class="workspace-right-dock" [class.drawer-open]="isAnyDrawerOpen()">
+    <button (click)="toggleDrawer('info')" [class.active]="showInfo()" data-tooltip="Propiedades del Documento">
+      <mat-icon fontSet="material-symbols-rounded">info</mat-icon>
+    </button>
+    <button (click)="toggleDrawer('workflow')" [class.active]="showWorkflow()" data-tooltip="Mapa de BPMN / Workflow">
+      <mat-icon fontSet="material-symbols-rounded">account_tree</mat-icon>
+    </button>
+    <button (click)="toggleDrawer('collab')" [class.active]="showCollab()" data-tooltip="Miembros y Colaboradores">
+      <mat-icon fontSet="material-symbols-rounded">people</mat-icon>
+    </button>
+    <button (click)="toggleDrawer('history')" [class.active]="showHistory()" data-tooltip="Historial de Versiones">
+      <mat-icon fontSet="material-symbols-rounded">history</mat-icon>
+    </button>
+    <button (click)="toggleDrawer('comments')" [class.active]="showComments()" data-tooltip="Chat de Colaboración">
+      <mat-icon fontSet="material-symbols-rounded">forum</mat-icon>
+      @if (comments().length > 0) {
+      <span class="dock-badge">{{ comments().length }}</span>
+      }
+    </button>
+  </div>
+
+  <!-- Main Workspace Canvas Area -->
+  <div #workspaceCanvas (scroll)="onCanvasScroll()" (click)="focusEditor($event)" class="workspace-main-canvas animate-fade-in"
+    [class.left-drawer-open]="showAiCopilot()"
+    [class.right-drawer-open]="showInfo() || showWorkflow() || showCollab() || showHistory() || showComments()">
+
+    <!-- Incoming Lock Request Modal Overlay -->
+    @if (solicitanteLock()) {
+    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-[9999] animate-fade-in" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center;">
+      <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-xl max-w-md w-full mx-4 space-y-4" style="background: white; border: 1px solid var(--theme-element-border-color); border-radius: 1.25rem; max-width: 28rem; width: 100%; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; box-shadow: var(--theme-shadow-lg);">
+        <div class="flex items-center gap-3 text-red-650" style="display: flex; align-items: center; gap: 0.75rem; color: #dc2626;">
+          <div class="h-10 w-10 rounded-full bg-red-50 flex items-center justify-center" style="height: 2.5rem; width: 2.5rem; border-radius: 9999px; background: rgba(220, 38, 38, 0.05); display: flex; align-items: center; justify-content: center;">
+            <mat-icon fontSet="material-symbols-rounded" class="!text-lg">vpn_key</mat-icon>
+          </div>
+          <div>
+            <h3 class="text-xs font-black uppercase text-slate-800" style="margin: 0; font-size: 0.8rem; font-weight: 900; color: #1e293b;">Solicitud de Control</h3>
+            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider" style="margin: 0; font-size: 0.6rem; letter-spacing: 0.05em; color: #94a3b8;">Transferencia de turno de edición</p>
+          </div>
+        </div>
+        <p class="text-xs font-semibold text-slate-600 leading-normal" style="font-size: 0.75rem; line-height: 1.5; color: #475569; margin: 0;">
+          El usuario <strong>{{ solicitanteLock() }}</strong> está solicitando tomar el control de edición de este documento. 
+          Si aceptas, guardaremos tus cambios actuales y el documento pasará a ser de sólo lectura para ti.
+        </p>
+        <div class="flex items-center justify-end gap-2 pt-2" style="display: flex; justify-content: flex-end; gap: 0.5rem; padding-top: 0.5rem;">
+          <button (click)="rechazarTransferenciaLock()" class="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-850 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer" style="border: none; border-radius: 0.75rem; padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 700; background: #f1f5f9; color: #475569; cursor: pointer; transition: all 0.2s;">
+            Mantener Edición
+          </button>
+          <button (click)="aceptarTransferenciaLock()" class="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-red-650 hover:bg-red-700 rounded-xl transition cursor-pointer shadow-sm" style="border: none; border-radius: 0.75rem; padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 700; background: #dc2626; color: white; display: flex; align-items: center; gap: 0.375rem; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <mat-icon fontSet="material-symbols-rounded" class="!text-xs">swap_horiz</mat-icon>
+            <span>Transferir Control</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- Lock warning alert banner -->
+    @if (!cargando() && !estaBloqueadoPorMi()) {
+    <div class="locked-warning flex items-center justify-between gap-4 p-4 rounded-xl border" style="background-color: rgba(239, 68, 68, 0.05); border-color: rgba(239, 68, 68, 0.15); color: #ef4444; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem; border-radius: 0.75rem; border: 1px solid rgba(239, 68, 68, 0.15); width: 100%;">
+      <div class="flex items-center gap-2" style="display: flex; align-items: center; gap: 0.5rem;">
+        <mat-icon fontSet="material-symbols-rounded">lock</mat-icon>
+        <span>Modo de lectura. El archivo está bloqueado en edición por <strong>{{ documento()?.bloqueadoPor }}</strong>.</span>
+      </div>
+      <div>
+        @if (solicitudPendiente()) {
+          <button class="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold bg-amber-500 text-white rounded-lg cursor-not-allowed animate-pulse" style="border: none; border-radius: 0.5rem; padding: 0.375rem 0.75rem; background: #f59e0b; color: white; display: flex; align-items: center; gap: 0.25rem;">
+            <mat-icon fontSet="material-symbols-rounded" class="!text-xs">hourglass_empty</mat-icon>
+            <span>Esperando respuesta...</span>
+          </button>
+        } @else {
+          <button (click)="enviarPeticionLock()" class="flex items-center gap-1.5 px-3.5 py-1.5 text-[10px] font-bold bg-red-600 hover:bg-red-700 text-white rounded-lg transition cursor-pointer shadow-sm" style="border: none; border-radius: 0.5rem; padding: 0.375rem 0.875rem; background: #dc2626; color: white; display: flex; align-items: center; gap: 0.25rem; cursor: pointer; transition: all 0.2s;">
+            <mat-icon fontSet="material-symbols-rounded" class="!text-xs">key</mat-icon>
+            <span>Solicitar Control</span>
+          </button>
+        }
+      </div>
+    </div>
+    }
+
+    <!-- ═══════ FORMATTING TOOLBAR ═══════ -->
+    @if (!cargando() && estaBloqueadoPorMi() && !esHojaCalculo()) {
+    <div class="editor-toolbar">
+      <!-- Text Style Group -->
+      <div class="toolbar-group">
+        <button class="toolbar-btn" [class.is-active]="editor.isActive('bold')"
+          (click)="editor.chain().focus().toggleBold().run()" title="Negrita (Ctrl+B)">
+          <mat-icon fontSet="material-symbols-rounded">format_bold</mat-icon>
+        </button>
+        <button class="toolbar-btn" [class.is-active]="editor.isActive('italic')"
+          (click)="editor.chain().focus().toggleItalic().run()" title="Cursiva (Ctrl+I)">
+          <mat-icon fontSet="material-symbols-rounded">format_italic</mat-icon>
+        </button>
+        <button class="toolbar-btn" [class.is-active]="editor.isActive('strike')"
+          (click)="editor.chain().focus().toggleStrike().run()" title="Tachado">
+          <mat-icon fontSet="material-symbols-rounded">strikethrough_s</mat-icon>
+        </button>
+        <button class="toolbar-btn" [class.is-active]="editor.isActive('code')"
+          (click)="editor.chain().focus().toggleCode().run()" title="Código inline">
+          <mat-icon fontSet="material-symbols-rounded">code</mat-icon>
+        </button>
+      </div>
+
+      <span class="toolbar-divider"></span>
+
+      <!-- Heading Group -->
+      <div class="toolbar-group">
+        <button class="toolbar-btn" [class.is-active]="editor.isActive('heading', { level: 1 })"
+          (click)="editor.chain().focus().toggleHeading({ level: 1 }).run()" title="Título 1">
+          H1
+        </button>
+        <button class="toolbar-btn" [class.is-active]="editor.isActive('heading', { level: 2 })"
+          (click)="editor.chain().focus().toggleHeading({ level: 2 }).run()" title="Título 2">
+          H2
+        </button>
+        <button class="toolbar-btn" [class.is-active]="editor.isActive('heading', { level: 3 })"
+          (click)="editor.chain().focus().toggleHeading({ level: 3 }).run()" title="Título 3">
+          H3
+        </button>
+        <button class="toolbar-btn" [class.is-active]="editor.isActive('paragraph')"
+          (click)="editor.chain().focus().setParagraph().run()" title="Párrafo Normal">
+          <mat-icon fontSet="material-symbols-rounded">notes</mat-icon>
+        </button>
+      </div>
+
+      <span class="toolbar-divider"></span>
+
+      <!-- List Group -->
+      <div class="toolbar-group">
+        <button class="toolbar-btn" [class.is-active]="editor.isActive('bulletList')"
+          (click)="editor.chain().focus().toggleBulletList().run()" title="Lista con viñetas">
+          <mat-icon fontSet="material-symbols-rounded">format_list_bulleted</mat-icon>
+        </button>
+        <button class="toolbar-btn" [class.is-active]="editor.isActive('orderedList')"
+          (click)="editor.chain().focus().toggleOrderedList().run()" title="Lista numerada">
+          <mat-icon fontSet="material-symbols-rounded">format_list_numbered</mat-icon>
+        </button>
+        <button class="toolbar-btn" [class.is-active]="editor.isActive('blockquote')"
+          (click)="editor.chain().focus().toggleBlockquote().run()" title="Cita">
+          <mat-icon fontSet="material-symbols-rounded">format_quote</mat-icon>
+        </button>
+        <button class="toolbar-btn" (click)="editor.chain().focus().setHorizontalRule().run()" title="Línea divisora">
+          <mat-icon fontSet="material-symbols-rounded">horizontal_rule</mat-icon>
+        </button>
+      </div>
+
+      <span class="toolbar-divider"></span>
+
+      <!-- Table & Media Group -->
+      <div class="toolbar-group">
+        <button class="toolbar-btn" (click)="insertarTabla()" title="Insertar Tabla 3x3">
+          <mat-icon fontSet="material-symbols-rounded">table_chart</mat-icon>
+        </button>
+        @if (editor.isActive('table')) {
+        <button class="toolbar-btn" (click)="editor.chain().focus().addColumnAfter().run()" title="Añadir Columna">
+          <mat-icon fontSet="material-symbols-rounded">add_column_right</mat-icon>
+        </button>
+        <button class="toolbar-btn" (click)="editor.chain().focus().addRowAfter().run()" title="Añadir Fila">
+          <mat-icon fontSet="material-symbols-rounded">add_row_below</mat-icon>
+        </button>
+        <button class="toolbar-btn danger-btn" (click)="editor.chain().focus().deleteTable().run()"
+          title="Eliminar Tabla">
+          <mat-icon fontSet="material-symbols-rounded">delete</mat-icon>
+        </button>
+        }
+      </div>
+
+      <span class="toolbar-divider"></span>
+
+      <!-- Undo/Redo -->
+      <div class="toolbar-group">
+        <button class="toolbar-btn" (click)="editor.chain().focus().undo().run()" [disabled]="!editor.can().undo()"
+          title="Deshacer (Ctrl+Z)">
+          <mat-icon fontSet="material-symbols-rounded">undo</mat-icon>
+        </button>
+        <button class="toolbar-btn" (click)="editor.chain().focus().redo().run()" [disabled]="!editor.can().redo()"
+          title="Rehacer (Ctrl+Shift+Z)">
+          <mat-icon fontSet="material-symbols-rounded">redo</mat-icon>
+        </button>
+      </div>
+
+      <span class="toolbar-divider"></span>
+
+      <!-- Dictado por Voz Directo -->
+      <div class="toolbar-group">
+        <button class="toolbar-btn voice-dictation-btn" [class.is-active]="isDictatingToEditor()"
+          (click)="toggleEditorDictation()" title="Dictar por voz en el documento (Speech-to-text)">
+          <mat-icon fontSet="material-symbols-rounded" [class.recording-pulse]="isDictatingToEditor()">
+            {{ isDictatingToEditor() ? 'mic' : 'mic_none' }}
+          </mat-icon>
+          @if (isDictatingToEditor()) {
+          <span class="voice-badge">DICTANDO</span>
+          }
+        </button>
+      </div>
+    </div>
+    }
+
+    @if (!cargando() && estaBloqueadoPorMi() && esHojaCalculo()) {
+      <div class="editor-toolbar spreadsheet-actions">
+        <strong>HOJA ELECTRÓNICA</strong>
+        <button class="toolbar-btn" (click)="agregarFilaHoja()" title="Agregar fila"><mat-icon fontSet="material-symbols-rounded">add_row_below</mat-icon></button>
+        <button class="toolbar-btn" (click)="eliminarFilaHoja()" title="Eliminar fila seleccionada"><mat-icon fontSet="material-symbols-rounded">delete_sweep</mat-icon></button>
+        <button class="toolbar-btn" (click)="agregarColumnaHoja()" title="Agregar columna"><mat-icon fontSet="material-symbols-rounded">add_column_right</mat-icon></button>
+        <button class="toolbar-btn" (click)="eliminarColumnaHoja()" title="Eliminar columna seleccionada"><mat-icon fontSet="material-symbols-rounded">view_column</mat-icon></button>
+        <span class="spreadsheet-lock-note">Los cambios se sincronizan por documento y se versionan al publicar.</span>
+      </div>
+    }
+
+    <!-- TipTap Editor Onboarding Hub Overlay (Moved outside to be full screen modal) -->
+    @if (id === 'nuevo' && showBlankOverlay()) {
+    <div class="blank-state-overlay animate-fade-in">
+      <div class="blank-state-content">
+        <!-- Setup Header -->
+        <div class="blank-setup-header">
+          <div class="blank-setup-logo-box">
+            <mat-icon fontSet="material-symbols-rounded">edit_note</mat-icon>
+          </div>
+          <h3 class="blank-setup-title">Configurar Nuevo Documento</h3>
+          <p class="blank-setup-subtitle">Establece las propiedades básicas y elige cómo redactar tu documento.</p>
+        </div>
+
+        <!-- Document Properties Form -->
+        <div class="blank-setup-fields">
+          <div class="blank-field-group">
+            <label class="blank-field-label">Título del Expediente</label>
+            <input type="text" class="blank-field-input" [ngModel]="documento()?.nombre"
+              (ngModelChange)="updateDocName($event)" placeholder="Ej: Contrato de Soporte Nivel 3...">
+          </div>
+          <div class="blank-field-group">
+            <label class="blank-field-label">Descripción / Propósito (Opcional)</label>
+            <input type="text" class="blank-field-input" [ngModel]="documento()?.descripcion"
+              (ngModelChange)="updateDocDesc($event)" placeholder="Ej: Requerimientos técnicos y responsabilidades...">
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="blank-setup-divider">
+          <span class="divider-text">¿Cómo deseas iniciar?</span>
+        </div>
+
+        <!-- Templates Grid -->
+        <div class="template-grid">
+          @for (tmp of aiTemplates; track tmp.label) {
+            <button (click)="aplicarPlantilla(tmp)" class="template-card-btn">
+              <div class="template-card-icon-box">
+                <mat-icon fontSet="material-symbols-rounded">{{ tmp.icon }}</mat-icon>
+              </div>
+              <div class="template-card-info">
+                <span class="template-card-label">{{ tmp.label }}</span>
+                <span class="template-card-desc">{{ tmp.desc }}</span>
+              </div>
+              <mat-icon fontSet="material-symbols-rounded" class="template-card-arrow">arrow_forward</mat-icon>
+            </button>
+          }
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="blank-setup-footer">
+          <button (click)="saltarBlanco()" class="start-blank-btn">
+            <mat-icon fontSet="material-symbols-rounded" class="btn-icon">edit</mat-icon>
+            <span>Comenzar lienzo en blanco</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- Clean Editor Sheet Paper -->
+    <main class="medium-sheet" [class.has-toolbar]="!cargando() && estaBloqueadoPorMi()">
+      @if (cargando()) {
+      <div class="canvas-loading"
+        style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; flex: 1;">
+        <span class="spinner-inline" style="width: 2rem; height: 2rem; border-width: 3px;"></span>
+        <p class="font-black uppercase tracking-wider text-xs text-slate-500">CARGANDO CONTENIDO...</p>
+      </div>
+      } @else {
+      <!-- Document Header inside the sheet -->
+      <div class="sheet-header">
+        <span class="sheet-eyebrow">DMS EDITOR</span>
+        @if (estaBloqueadoPorMi() || id === 'nuevo') {
+        <input type="text" class="editable-doc-title" [ngModel]="documento()?.nombre"
+          (ngModelChange)="updateDocName($event)" placeholder="Nombre del documento...">
+        <input type="text" class="editable-doc-desc" [ngModel]="documento()?.descripcion"
+          (ngModelChange)="updateDocDesc($event)" placeholder="Añade una descripción (opcional)...">
+        } @else {
+        <h2>{{ documento()?.nombre }}</h2>
+        <p class="sheet-desc">{{ documento()?.descripcion || 'Sin descripción disponible.' }}</p>
+        }
+      </div>
+
+      @if (esHojaCalculo()) {
+        <div #spreadsheetHost class="spreadsheet-host" [class.spreadsheet-readonly]="!estaBloqueadoPorMi()"></div>
+      } @else {
+        <tiptap-editor [editor]="editor" [class.editor-readonly]="!estaBloqueadoPorMi()"
+          class="tiptap-container" [class.blur-content]="id === 'nuevo' && showBlankOverlay()"></tiptap-editor>
+      }
+
+      <!-- Document utilities / statistics bar -->
+      <div class="sheet-footer-utilities">
+        <div class="utilities-left">
+          @if (estaBloqueadoPorMi()) {
+          <input type="file" #fileImporter style="display: none;" (change)="onFileImported($event)" accept=".txt,.html,.htm,.md">
+          <button (click)="importarArchivo(fileImporter)" class="util-action-btn" title="Importar archivo local (.txt, .html, .md)" style="background-color: #f0fdf4; color: #16a34a; border-color: #bbf7d0;">
+            <mat-icon fontSet="material-symbols-rounded">upload_file</mat-icon>
+            <span>Importar</span>
+          </button>
+          <button (click)="limpiarLienzo()" class="util-action-btn danger" title="Limpiar todo el texto">
+            <mat-icon fontSet="material-symbols-rounded">delete_sweep</mat-icon>
+            <span>Limpiar</span>
+          </button>
+          }
+          <button (click)="exportarPDF()" class="util-action-btn" title="Exportar como PDF" style="background-color: #fef2f2; color: #dc2626; border-color: #dc2626;">
+            <mat-icon fontSet="material-symbols-rounded">picture_as_pdf</mat-icon>
+            <span>PDF</span>
+          </button>
+          <button (click)="descargarHtml()" class="util-action-btn" title="Descargar como HTML">
+            <mat-icon fontSet="material-symbols-rounded">download</mat-icon>
+            <span>HTML</span>
+          </button>
+
+          <button (click)="descargarTxt()" class="util-action-btn" title="Descargar como texto plano">
+            <mat-icon fontSet="material-symbols-rounded">text_snippet</mat-icon>
+            <span>TXT</span>
+          </button>
+        </div>
+
+        <div class="utilities-right">
+          <span class="stat-badge">
+            <mat-icon fontSet="material-symbols-rounded"
+              style="font-size:0.75rem;width:0.75rem;height:0.75rem;">article</mat-icon>
+            {{ wordCount() }} palabras
+          </span>
+          <span class="stat-badge">{{ charCount() }} caracteres</span>
+          <div class="pagination-controls" style="display: flex; align-items: center; gap: 6px;">
+            <button (click)="irAPagina(currentPage() - 1)" [disabled]="currentPage() <= 1" class="page-nav-btn" title="Página Anterior">
+              <mat-icon fontSet="material-symbols-rounded">chevron_left</mat-icon>
+            </button>
+            <span class="stat-badge" style="margin: 0;">Pág. {{ currentPage() }} de {{ totalPages() }}</span>
+            <button (click)="irAPagina(currentPage() + 1)" [disabled]="currentPage() >= totalPages()" class="page-nav-btn" title="Página Siguiente">
+              <mat-icon fontSet="material-symbols-rounded">chevron_right</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+      }
+    </main>
+  </div>
+
+  <!-- DRAWER: HISTORIAL DE SNAPSHOTS -->
+  <aside class="dms-drawer right-drawer" [class.drawer-open]="showHistory()">
+    <div class="drawer-header">
+      <div class="drawer-header-title">
+        <mat-icon fontSet="material-symbols-rounded">history</mat-icon>
+        <h2>Historial de Snapshots</h2>
+      </div>
+      <button (click)="showHistory.set(false)" class="close-drawer-btn">
+        <mat-icon fontSet="material-symbols-rounded">close</mat-icon>
+      </button>
+    </div>
+
+    <div class="drawer-body">
+      <p class="drawer-info-text">
+        Puntos de control inmutables del documento. Puedes previsualizar o restaurar snapshots anteriores.
+      </p>
+
+      <div class="snapshots-list">
+        @if (!documento()?.versiones || documento()?.versiones?.length === 0) {
+        <div class="empty-drawer-state">
+          No hay snapshots registrados. Publica una nueva versión arriba para iniciar el historial.
+        </div>
+        } @else {
+        @for (version of documento()?.versiones; track version.version) {
+        <div class="snapshot-card">
+          <div class="snapshot-card-header">
+            <span class="snapshot-version-badge">v{{ version.version }}</span>
+            <span class="snapshot-time font-bold">{{ version.fechaSubida | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+          <p class="snapshot-comment">"{{ version.comentarioCambio || 'Sin comentario de cambio' }}"</p>
+          <div class="snapshot-meta">
+            <span>Autor: <strong>{{ version.subidoPor }}</strong></span>
+          </div>
+
+          <div class="snapshot-card-actions">
+            <button (click)="previewVersion.set(version)" class="snapshot-btn-secondary">
+              <mat-icon fontSet="material-symbols-rounded">visibility</mat-icon>
+              <span>Ver Contenido</span>
+            </button>
+            @if (estaBloqueadoPorMi()) {
+            <button (click)="restaurarVersion(version)" class="snapshot-btn-primary">
+              <mat-icon fontSet="material-symbols-rounded">history</mat-icon>
+              <span>Restaurar</span>
+            </button>
+            }
+          </div>
+        </div>
+        }
+        }
+      </div>
+    </div>
+  </aside>
+
+  <!-- DRAWER: REAL-TIME DISCUSSION FORUM -->
+  <aside class="dms-drawer right-drawer" [class.drawer-open]="showComments()">
+    <div class="drawer-header">
+      <div class="drawer-header-title">
+        <mat-icon fontSet="material-symbols-rounded">forum</mat-icon>
+        <h2>Foro de Discusión</h2>
+      </div>
+      <button (click)="showComments.set(false)" class="close-drawer-btn">
+        <mat-icon fontSet="material-symbols-rounded">close</mat-icon>
+      </button>
+    </div>
+
+    <div class="drawer-body chat-drawer-body">
+      <p class="drawer-info-text">
+        Chat en vivo del documento. Tus comentarios se transmitirán instantáneamente a todos los colaboradores activos.
+      </p>
+
+      <!-- Message History List -->
+      <div class="chat-messages-container" #chatContainer>
+        @if (comments().length === 0) {
+        <div class="empty-drawer-state" style="margin-top: 40px;">
+          El foro está vacío. Envía tu primera consulta o comentario a continuación.
+        </div>
+        } @else {
+        @for (comment of comments(); track comment.id) {
+        <div class="chat-message-item">
+          <div class="chat-avatar">
+            {{ comment.avatar }}
+          </div>
+          <div class="chat-bubble">
+            <div class="chat-bubble-header">
+              <strong>{{ comment.author }}</strong>
+              <span>{{ comment.timestamp | date:'HH:mm' }}</span>
+            </div>
+            <p>{{ comment.text }}</p>
+          </div>
+        </div>
+        }
+        }
+      </div>
+
+      <!-- Chat text input -->
+      <div class="chat-input-bar">
+        <input type="text" [(ngModel)]="newCommentText" (keyup.enter)="submitComment()"
+          placeholder="Escribe una observación..." class="chat-text-input" />
+        <button (click)="submitComment()" class="chat-send-btn">
+          <mat-icon fontSet="material-symbols-rounded">send</mat-icon>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MODAL: SNAPSHOT CREATION COMMENT -->
+  @if (modalSnapshot()) {
+  <div class="fixed-overlay modal-open">
+    <div class="modal-box">
+      <h3>Publicar Snapshot de Versión</h3>
+      <p class="modal-intro">Congela el borrador actual como una versión permanente de auditoría disponible para todos
+        los miembros de tu departamento.</p>
+
+      <div class="modal-inputs">
+        <div class="input-group">
+          <label>Descripción del Cambio</label>
+          <input type="text" [(ngModel)]="comentarioSnapshot" placeholder="Ej. Redacción final del Anexo técnico A..."
+            class="modal-text-input" />
+        </div>
+
+        <div class="modal-actions">
+          <button (click)="cerrarModalSnapshot()" class="modal-btn secondary">
+            CANCELAR
+          </button>
+          <button (click)="confirmarSnapshot()" [disabled]="!comentarioSnapshot.trim() || publicandoSnapshot()"
+            class="modal-btn primary">
+            {{ publicandoSnapshot() ? 'PUBLICANDO...' : 'PUBLICAR SNAP' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- MODAL: HISTORICAL SNAPSHOT PREVIEW -->
+  @if (previewVersion(); as pv) {
+  <div class="fixed-overlay modal-open">
+    <div class="modal-box widescreen-modal">
+      <div class="preview-modal-header">
+        <div class="preview-header-details">
+          <h3>
+            <span class="preview-version-tag">v{{ pv.version }}</span>
+            <span>Previsualización de Snapshot</span>
+          </h3>
+          <span class="preview-meta">Publicado el {{ pv.fechaSubida | date:'dd/MM/yyyy HH:mm' }} por {{ pv.subidoPor
+            }}</span>
+        </div>
+        <button (click)="previewVersion.set(null)" class="close-preview-btn">
+          <mat-icon fontSet="material-symbols-rounded">close</mat-icon>
+        </button>
+      </div>
+
+      <div class="preview-modal-body" [innerHTML]="pv.contenidoColaborativoSnapshot || 'Esta versión no contiene texto.'">
+      </div>
+
+      <div class="preview-modal-actions">
+        <button (click)="previewVersion.set(null)" class="modal-btn secondary">
+          Cerrar Previsualización
+        </button>
+        @if (estaBloqueadoPorMi()) {
+        <button (click)="restaurarVersion(pv)" class="modal-btn primary-action">
+          <mat-icon fontSet="material-symbols-rounded">history</mat-icon>
+          <span>Restaurar esta Versión</span>
+        </button>
+        }
+      </div>
+    </div>
+  </div>
+  }
+</div>

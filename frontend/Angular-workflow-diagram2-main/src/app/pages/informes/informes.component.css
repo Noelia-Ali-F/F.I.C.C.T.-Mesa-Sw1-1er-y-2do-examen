@@ -1,0 +1,227 @@
+/* ── Informes (Reports) Component Premium Styles ── */
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+/* SVG circle progress transitions */
+svg circle {
+  transition: stroke-dashoffset 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Tab Navigation Control Bar ── */
+.tab-nav-bar {
+  display: flex;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--theme-element-border-color);
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  scrollbar-width: none; /* Firefox */
+  white-space: nowrap;
+}
+
+.tab-nav-bar::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.tab-nav-btn {
+  padding: 0.75rem 1.25rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid transparent;
+  color: var(--theme-slate-500);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.25s var(--ease-smooth);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+}
+
+.tab-nav-btn:hover {
+  color: var(--theme-border-text-color);
+  background-color: rgba(13, 148, 136, 0.02);
+}
+
+.tab-nav-btn.is-active {
+  border-bottom-color: var(--theme-primary-color);
+  color: var(--theme-primary-color);
+  font-weight: 800;
+  background-color: var(--theme-primary-light-color);
+}
+
+/* ── Metric Cards Row ── */
+.metric-card {
+  background-color: var(--theme-surface-color);
+  border: 1px solid var(--theme-element-border-color);
+  border-radius: 1.25rem;
+  padding: 1rem 1.25rem;
+  box-shadow: var(--theme-shadow-sm);
+  transition: all 0.3s var(--ease-smooth);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--theme-shadow-md);
+  border-color: rgba(15, 118, 110, 0.15);
+}
+
+.metric-card-icon-box {
+  height: 3rem;
+  width: 3rem;
+  border-radius: 1rem;
+  background-color: var(--theme-surface-hover-color);
+  border: 1px solid var(--theme-element-border-color);
+  color: var(--theme-slate-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.metric-card-icon-box.active-review {
+  background-color: rgba(37, 99, 235, 0.05);
+  border-color: rgba(37, 99, 235, 0.12);
+  color: #2563eb;
+}
+
+/* ── Dashboard Cards & Simulator ── */
+.dashboard-card {
+  background: var(--theme-surface-color);
+  border: 1px solid var(--theme-element-border-color);
+  padding: 1.25rem;
+  border-radius: 1.25rem;
+  box-shadow: var(--theme-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.sim-btn {
+  flex: 1;
+  padding: 0.65rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 0.5rem;
+  border: 1px solid var(--theme-element-border-color);
+  background: var(--theme-surface-light-color);
+  color: var(--theme-slate-500);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-smooth);
+  text-align: center;
+}
+
+.sim-btn:hover:not(.is-active) {
+  background: var(--theme-surface-hover-color);
+  color: var(--theme-border-text-color);
+}
+
+.sim-btn.is-active.normal {
+  background: var(--theme-primary-color);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 2px 6px rgba(15, 118, 110, 0.15);
+}
+
+.sim-btn.is-active.stress {
+  background: var(--theme-secondary-color);
+  color: var(--theme-border-text-color);
+  border-color: transparent;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.2);
+}
+
+.sim-btn.is-active.critical {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.2);
+}
+
+/* ── Risk Cards ── */
+.risk-card {
+  background: var(--theme-surface-color);
+  border: 1px solid var(--theme-element-border-color);
+  padding: 1rem;
+  border-radius: 0.75rem;
+  box-shadow: var(--theme-shadow-sm);
+  transition: all 0.3s var(--ease-smooth);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.75rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.risk-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(15, 118, 110, 0.15);
+  box-shadow: var(--theme-shadow-md);
+}
+
+/* ── History Audit ── */
+.history-container {
+  background: var(--theme-surface-color);
+  border: 1px solid var(--theme-element-border-color);
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+  box-shadow: var(--theme-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.history-item-card {
+  background: var(--theme-surface-light-color);
+  border: 1px solid rgba(226, 232, 240, 0.5);
+  padding: 0.85rem 1rem;
+  border-radius: 0.75rem;
+  transition: all 0.2s var(--ease-smooth);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .history-item-card {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+  }
+}
+
+.history-item-card:hover {
+  background: var(--theme-surface-color);
+  border-color: rgba(15, 118, 110, 0.15);
+  box-shadow: var(--theme-shadow-sm);
+}
+
+/* Helper to center material icons in buttons */
+mat-icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+}
+
+/* Force all text elements, headings, borders, and lists within the generated report to be strictly black */
+.report-content-container,
+.report-content-container * {
+  color: #000000 !important;
+  border-color: #000000 !important;
+}
+

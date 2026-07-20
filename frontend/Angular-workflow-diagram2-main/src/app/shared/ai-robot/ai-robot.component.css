@@ -1,0 +1,211 @@
+:host {
+  display: block;
+}
+
+.robot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  transition: all 0.3s ease;
+}
+
+.robot-container {
+  position: relative;
+  width: 100px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.robot-svg {
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+}
+
+/* --- Animations --- */
+
+/* Base Floating */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.robot-svg {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* Antenna Bulb Pulse */
+@keyframes pulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.3);
+    opacity: 0.7;
+  }
+}
+
+.antenna-bulb {
+  transform-origin: center;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Eye Blinking */
+@keyframes blink {
+
+  0%,
+  90%,
+  100% {
+    transform: scaleY(1);
+  }
+
+  95% {
+    transform: scaleY(0.1);
+  }
+}
+
+.eye {
+  transform-origin: center;
+  animation: blink 4s infinite;
+}
+
+/* Voice Wave for Talking */
+@keyframes wave {
+
+  0%,
+  100% {
+    transform: scaleX(0.8);
+  }
+
+  50% {
+    transform: scaleX(1.2);
+  }
+}
+
+.voice-wave {
+  transform-origin: center;
+  animation: wave 0.2s ease-in-out infinite;
+}
+
+/* Arms Floating */
+@keyframes armFloat {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.left-arm {
+  animation: armFloat 3s ease-in-out infinite;
+}
+
+.right-arm {
+  animation: armFloat 3s ease-in-out infinite 0.5s;
+}
+
+/* Aura */
+.robot-aura {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(20, 184, 166, 0.2) 0%, transparent 70%);
+  z-index: 1;
+  top: 30%;
+  transition: background 0.3s ease;
+}
+
+/* --- State Overrides --- */
+
+/* Thinking State */
+.robot--thinking .robot-svg {
+  animation: float 1s ease-in-out infinite;
+}
+
+.robot--thinking .antenna-bulb {
+  animation: pulse 0.5s ease-in-out infinite;
+}
+
+.robot--thinking .robot-aura {
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.3) 0%, transparent 70%);
+}
+
+/* Talking State */
+.robot--talking .robot-svg {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Error State */
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-2px) rotate(-1deg);
+  }
+
+  75% {
+    transform: translateX(2px) rotate(1deg);
+  }
+}
+
+.robot--error .robot-svg {
+  animation: shake 0.1s infinite;
+}
+
+/* Label Styles */
+.robot-label {
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.75rem;
+  background: rgba(15, 118, 110, 0.1);
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #f8ad56;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.robot-label-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  transition: background 0.3s ease;
+}
+
+/* Compact Mode */
+.robot--compact {
+  padding: 0.25rem;
+}
+
+.robot--compact .robot-container {
+  width: 60px;
+  height: 72px;
+}

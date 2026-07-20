@@ -1,0 +1,422 @@
+<div class="wf-page wf-view-body wf-animate-in">
+
+  <!-- Unified Page Header -->
+  <app-page-header
+    title="Crear Solicitud"
+    subtitle="Formulario de registro en tres etapas"
+    eyebrow="REGISTRO"
+    icon="add_box"
+    gradientClasses="from-teal-500 via-emerald-400 to-indigo-500"
+  >
+    <span class="bg-indigo-50 border border-indigo-100/50 text-indigo-700 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Etapa {{ currentStep() }} / 3</span>
+  </app-page-header>
+
+  <!-- Progress Bar Top -->
+  <div class="crear-progress-bar">
+    <div class="crear-progress-fill" [style.width.%]="formCompleteness()"></div>
+  </div>
+
+  <!-- Step Indicator -->
+  <div class="crear-step-indicator">
+    @for (step of [1,2,3]; track step) {
+    <div class="crear-step-dot" [class.is-active]="currentStep() === step"
+      [class.is-done]="currentStep() > step || (step === 3 && formCompleteness() === 100)">
+      <span class="crear-step-num">{{ step }}</span>
+    </div>
+    @if (step < 3) { <div class="crear-step-line" [class.is-done]="currentStep() > step">
+  </div>
+  }
+  }
+  <div class="crear-step-labels">
+    <span [class.is-active]="currentStep() === 1">Información</span>
+    <span [class.is-active]="currentStep() === 2">Configuración</span>
+    <span [class.is-active]="currentStep() === 3">Adjuntos y Envío</span>
+  </div>
+</div>
+
+<form [formGroup]="form" (ngSubmit)="onSubmit()" class="crear-form-layout">
+
+  <!-- ═══ STEP 1: INFORMACIÓN PRINCIPAL ═══ -->
+  @if (currentStep() === 1) {
+  <div class="crear-step-content wf-animate-in">
+    <div class="crear-main-card">
+      <div class="crear-card-header">
+        <div class="crear-card-icon">
+          <mat-icon fontSet="material-symbols-rounded" aria-hidden="true">edit_note</mat-icon>
+        </div>
+        <div>
+          <h2 class="crear-card-title">Información de la Solicitud</h2>
+          <p class="crear-card-subtitle">Proporciona un título claro y una descripción detallada para que el equipo
+            pueda procesar tu solicitud de manera eficiente.</p>
+        </div>
+      </div>
+
+      <!-- Title -->
+      <div class="crear-field">
+        <label class="crear-label">Título de la solicitud</label>
+        <input type="text" formControlName="titulo" class="crear-title-input"
+          placeholder="Ej. Solicitud de acceso a servidor de producción..." />
+        @if (form.controls.titulo.touched && form.controls.titulo.invalid) {
+        <p class="crear-error">El título debe tener entre 5 y 200 caracteres</p>
+        }
+        <span class="crear-char-count" [class.is-warning]="form.controls.titulo.value.length > 180">
+          {{ form.controls.titulo.value.length }}/200
+        </span>
+      </div>
+
+      <!-- Description -->
+      <div class="crear-field">
+        <label class="crear-label">Detalles y contexto</label>
+        <textarea rows="8" formControlName="descripcion" class="crear-textarea"
+          placeholder="Describe detalladamente lo que necesitas. Un buen contexto ayuda al equipo a procesar tu solicitud más rápido..."></textarea>
+        @if (form.controls.descripcion.touched && form.controls.descripcion.invalid) {
+        <p class="crear-error">La descripción debe tener entre 10 y 2000 caracteres</p>
+        }
+        <span class="crear-char-count" [class.is-warning]="form.controls.descripcion.value.length > 1800">
+          {{ form.controls.descripcion.value.length }}/2000
+        </span>
+      </div>
+
+      <!-- Navigation -->
+      <div class="crear-nav-actions">
+        <div></div>
+        <button type="button" (click)="nextStep()" [disabled]="!canProceedStep1() || recomendandoPolitica()"
+          class="crear-nav-btn crear-nav-btn-next">
+          {{ recomendandoPolitica() ? 'Analizando políticas...' : 'Recomendar política' }}
+          <mat-icon fontSet="material-symbols-rounded" aria-hidden="true" class="scale-75">arrow_forward</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- ═══ STEP 2: CONFIGURACIÓN (Dept + Priority) ═══ -->
+  @if (currentStep() === 2) {
+  <div class="crear-step-content wf-animate-in">
+    @if (recomendacionPolitica(); as recommendation) {
+      <div class="crear-main-card mb-5">
+        <div class="crear-card-header">
+          <div class="crear-card-icon"><mat-icon fontSet="material-symbols-rounded">route</mat-icon></div>
+          <div>
+            <h2 class="crear-card-title">Política de negocio recomendada</h2>
+            <p class="crear-card-subtitle">{{ recommendation.motivo }} Confianza: {{ (recommendation.confianza * 100).toFixed(0) }}%</p>
+          </div>
+        </div>
+        @if (recommendation.requiereSeleccionManual) {
+          <div class="crear-file-error">La confianza es baja. Selecciona manualmente una política antes de continuar.</div>
+        }
+        <div class="crear-dept-grid">
+          @for (policy of opcionesPolitica(); track policy.key) {
+            <button type="button" class="crear-dept-option" [class.is-selected]="politicaConfirmada() === policy.key" (click)="seleccionarPolitica(policy.key)">
+              <div class="crear-dept-option-content">
+                <div class="crear-dept-text">
+                  <span class="crear-dept-name">{{ policy.nombre }}</span>
+                  <span class="crear-dept-desc">{{ policy.motivo }} · {{ (policy.score * 100).toFixed(0) }}%</span>
+                </div>
+                @if (politicaConfirmada() === policy.key) { <mat-icon fontSet="material-symbols-rounded">check_circle</mat-icon> }
+              </div>
+            </button>
+          }
+        </div>
+      </div>
+    }
+    <div class="crear-split-layout">
+
+      <!-- Left: Department Selection -->
+      <div class="crear-main-card">
+        <div class="crear-card-header">
+          <div class="crear-card-icon" style="background: rgba(99, 102, 241, 0.08);">
+            <mat-icon fontSet="material-symbols-rounded" aria-hidden="true" style="color: #6366f1;">domain</mat-icon>
+          </div>
+          <div>
+            <h2 class="crear-card-title">Departamento Destino</h2>
+            <p class="crear-card-subtitle">Selecciona el área responsable de atender tu solicitud.</p>
+          </div>
+        </div>
+
+        @if (loadingDepts()) {
+        <div class="crear-loading-state">
+          <span class="crear-spinner"></span>
+          <span class="crear-loading-text">Cargando departamentos...</span>
+        </div>
+        } @else {
+        <div class="crear-dept-grid">
+          @for (dept of departamentosCatalogo; track dept) {
+          <label class="crear-dept-option" [class.is-selected]="form.controls.departamentoDestino.value === dept">
+            <input type="radio" formControlName="departamentoDestino" [value]="dept" class="sr-only">
+            <div class="crear-dept-option-content">
+              <div class="crear-dept-icon-box">
+                <mat-icon fontSet="material-symbols-rounded" aria-hidden="true">business</mat-icon>
+              </div>
+              <div class="crear-dept-text">
+                <span class="crear-dept-name">{{ dept }}</span>
+                @if (selectedDept()?.descripcion && form.controls.departamentoDestino.value === dept) {
+                <span class="crear-dept-desc">{{ selectedDept()?.descripcion }}</span>
+                }
+              </div>
+              <div class="crear-dept-check">
+                @if (form.controls.departamentoDestino.value === dept) {
+                <mat-icon fontSet="material-symbols-rounded" aria-hidden="true">check_circle</mat-icon>
+                }
+              </div>
+            </div>
+          </label>
+          }
+        </div>
+        }
+      </div>
+
+      <!-- Right: Priority + SLA -->
+      <div class="crear-side-panel">
+        <!-- Priority Selection -->
+        <div class="crear-main-card">
+          <div class="crear-card-header">
+            <div class="crear-card-icon" style="background: rgba(234, 88, 12, 0.08);">
+              <mat-icon fontSet="material-symbols-rounded" aria-hidden="true" style="color: #ea580c;">flag</mat-icon>
+            </div>
+            <div>
+              <h2 class="crear-card-title">Nivel de Prioridad</h2>
+              <p class="crear-card-subtitle">Define la urgencia para estimar el SLA.</p>
+            </div>
+          </div>
+
+          <div class="crear-priority-grid">
+            @for (p of ['BAJA', 'MEDIA', 'ALTA', 'URGENTE']; track p) {
+            <label class="crear-priority-option" [class.is-selected]="form.controls.prioridad.value === p"
+              [style.--priority-color]="PRIORITY_CONFIG[p].color" [style.--priority-bg]="PRIORITY_CONFIG[p].bgColor">
+              <input type="radio" formControlName="prioridad" [value]="p" class="sr-only">
+              <mat-icon fontSet="material-symbols-rounded" aria-hidden="true"
+                [style.color]="PRIORITY_CONFIG[p].color">{{ PRIORITY_CONFIG[p].icon }}</mat-icon>
+              <div class="crear-priority-text">
+                <span class="crear-priority-label">{{ PRIORITY_CONFIG[p].label }}</span>
+                <span class="crear-priority-desc">{{ PRIORITY_CONFIG[p].description }}</span>
+              </div>
+            </label>
+            }
+          </div>
+        </div>
+
+        <!-- SLA Preview Card -->
+        <div class="crear-sla-card">
+          <div class="crear-sla-header">
+            <mat-icon fontSet="material-symbols-rounded" aria-hidden="true">timer</mat-icon>
+            <span>Tiempo estimado (SLA)</span>
+          </div>
+          <div class="crear-sla-body">
+            <div class="crear-sla-number">
+              <span class="crear-sla-value">{{ slaPreview().horas }}</span>
+              <span class="crear-sla-unit">hrs</span>
+            </div>
+            <div class="crear-sla-meta">
+              <span class="crear-sla-label">{{ slaPreview().etiqueta }} hábiles</span>
+              <span class="crear-sla-deadline">Vence aprox. {{ slaPreview().fechaLimite | date:'dd/MM HH:mm' }}</span>
+            </div>
+          </div>
+          <div class="crear-sla-bar">
+            @for (step of [1,2,3,4]; track step) {
+            <div class="crear-sla-bar-segment"
+              [class.is-active]="step <= (slaPreview().horas <= 8 ? 4 : slaPreview().horas <= 24 ? 2 : 1)">
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="crear-nav-actions">
+      <button type="button" (click)="prevStep()" class="crear-nav-btn crear-nav-btn-back">
+        <mat-icon fontSet="material-symbols-rounded" aria-hidden="true" class="scale-75">arrow_back</mat-icon>
+        Información
+      </button>
+      <button type="button" (click)="nextStep()" [disabled]="!canProceedStep2()"
+        class="crear-nav-btn crear-nav-btn-next">
+        Siguiente: Adjuntos
+        <mat-icon fontSet="material-symbols-rounded" aria-hidden="true" class="scale-75">arrow_forward</mat-icon>
+      </button>
+    </div>
+  </div>
+  }
+
+  <!-- ═══ STEP 3: ADJUNTOS + SUBMIT ═══ -->
+  @if (currentStep() === 3) {
+  <div class="crear-step-content wf-animate-in">
+    <div class="crear-split-layout">
+
+      <!-- Left: File Upload -->
+      <div class="crear-main-card">
+        <div class="crear-card-header">
+          <div class="crear-card-icon" style="background: rgba(124, 58, 237, 0.08);">
+            <mat-icon fontSet="material-symbols-rounded" aria-hidden="true"
+              style="color: #7c3aed;">attach_file</mat-icon>
+          </div>
+          <div>
+            <h2 class="crear-card-title">Archivos Adjuntos</h2>
+            <p class="crear-card-subtitle">Adjunta documentos de soporte para tu solicitud. Estos archivos quedarán
+              vinculados al flujo de trabajo y visibles en el DMS.</p>
+          </div>
+        </div>
+
+        <!-- Dropzone -->
+        <div class="crear-dropzone" [class.is-dragging]="isDragging()" (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+          <input type="file" multiple
+            (change)="onFilesSelected($event)" class="crear-dropzone-input" />
+          <div class="crear-dropzone-content">
+            <div class="crear-dropzone-icon">
+              <mat-icon fontSet="material-symbols-rounded" aria-hidden="true">cloud_upload</mat-icon>
+            </div>
+            <span class="crear-dropzone-label">Arrastra archivos o haz clic para seleccionar</span>
+            <span class="crear-dropzone-hint">Cualquier tipo de archivo (PDF, Imágenes, Audio, Word, etc.) — Máximo 10MB por archivo</span>
+          </div>
+        </div>
+
+        <!-- Error -->
+        @if (errorArchivo()) {
+        <div class="crear-file-error">
+          <mat-icon fontSet="material-symbols-rounded" aria-hidden="true">error</mat-icon>
+          {{ errorArchivo() }}
+        </div>
+        }
+
+        <!-- File List -->
+        @if (archivosSeleccionados().length > 0) {
+        <div class="crear-file-list">
+          @for (archivo of archivosSeleccionados(); track $index) {
+          <div class="crear-file-item">
+            <div class="crear-file-type-badge" [style.background]="getFileTypeColor(archivo.type) + '12'"
+              [style.color]="getFileTypeColor(archivo.type)">
+              {{ getFileTypeLabel(archivo.type) }}
+            </div>
+            <div class="crear-file-info">
+              <span class="crear-file-name">{{ archivo.name }}</span>
+              <span class="crear-file-size">{{ formatFileSize(archivo.size) }}</span>
+            </div>
+            <button type="button" (click)="removeFile($index)" class="crear-file-remove">
+              <mat-icon fontSet="material-symbols-rounded" aria-hidden="true">close</mat-icon>
+            </button>
+          </div>
+          }
+          <div class="crear-file-total">
+            {{ archivosSeleccionados().length }} archivo(s) — {{ formatFileSize(totalSize()) }}
+          </div>
+        </div>
+        }
+
+        <div class="crear-optional-badge">
+          <mat-icon fontSet="material-symbols-rounded" aria-hidden="true" class="scale-75">info</mat-icon>
+          Los archivos adjuntos son opcionales. Se vincularán automáticamente a la solicitud en el DMS.
+        </div>
+      </div>
+
+      <!-- Right: Summary + Submit -->
+      <div class="crear-side-panel">
+        <!-- Summary Card -->
+        <div class="crear-summary-card">
+          <h3 class="crear-summary-title">
+            <mat-icon fontSet="material-symbols-rounded" aria-hidden="true">summarize</mat-icon>
+            Resumen de la solicitud
+          </h3>
+
+          <div class="crear-summary-rows">
+            <div class="crear-summary-row">
+              <span class="crear-summary-label">Título</span>
+              <span class="crear-summary-value">{{ form.controls.titulo.value || '—' }}</span>
+            </div>
+            <div class="crear-summary-row">
+              <span class="crear-summary-label">Departamento</span>
+              <span class="crear-summary-value crear-summary-badge">{{ form.controls.departamentoDestino.value || '—'
+                }}</span>
+            </div>
+            <div class="crear-summary-row">
+              <span class="crear-summary-label">Prioridad</span>
+              <span class="crear-summary-value" [style.color]="PRIORITY_CONFIG[form.controls.prioridad.value]?.color">
+                {{ PRIORITY_CONFIG[form.controls.prioridad.value]?.label || '—' }}
+              </span>
+            </div>
+            <div class="crear-summary-row">
+              <span class="crear-summary-label">SLA</span>
+              <span class="crear-summary-value">{{ slaPreview().etiqueta }}</span>
+            </div>
+            <div class="crear-summary-row">
+              <span class="crear-summary-label">Adjuntos</span>
+              <span class="crear-summary-value">{{ archivosSeleccionados().length }} archivo(s)</span>
+            </div>
+          </div>
+
+          <!-- Workflow path hint -->
+          <div class="crear-workflow-hint">
+            <mat-icon fontSet="material-symbols-rounded" aria-hidden="true">account_tree</mat-icon>
+            <span>Tu solicitud seguirá el flujo: <strong>PENDIENTE → EN_REVISIÓN → APROBADO/RECHAZADO</strong> dentro
+              del departamento seleccionado.</span>
+          </div>
+        </div>
+
+        <!-- Submit Error -->
+        @if (submitError) {
+        <div class="crear-submit-error">
+          <mat-icon fontSet="material-symbols-rounded" aria-hidden="true">error_outline</mat-icon>
+          {{ submitError }}
+        </div>
+        }
+
+        <!-- Submit Button -->
+        <button type="submit" [disabled]="form.invalid || isSubmitting" class="crear-submit-btn">
+          @if(isSubmitting) {
+          <span class="crear-spinner-white"></span>
+          <span>Procesando...</span>
+          } @else {
+          <mat-icon fontSet="material-symbols-rounded" aria-hidden="true">send</mat-icon>
+          <span>
+            @if (archivosSeleccionados().length > 0) {
+            Crear solicitud + {{ archivosSeleccionados().length }} archivo(s)
+            } @else {
+            Enviar nueva solicitud
+            }
+          </span>
+          }
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="crear-nav-actions">
+      <button type="button" (click)="prevStep()" class="crear-nav-btn crear-nav-btn-back">
+        <mat-icon fontSet="material-symbols-rounded" aria-hidden="true" class="scale-75">arrow_back</mat-icon>
+        Configuración
+      </button>
+      <div></div>
+    </div>
+  </div>
+  }
+</form>
+
+<!-- ═══ SUCCESS OVERLAY ═══ -->
+@if (showSuccessOverlay()) {
+<div class="crear-success-overlay wf-animate-scale">
+  <div class="crear-success-card">
+    <div class="crear-success-icon">
+      <mat-icon fontSet="material-symbols-rounded" aria-hidden="true">check_circle</mat-icon>
+    </div>
+    <h2 class="crear-success-title">¡Solicitud creada exitosamente!</h2>
+    <p class="crear-success-text">Tu solicitud ha sido registrada y está lista para ser procesada por el departamento
+      asignado.</p>
+
+    <div class="crear-success-actions">
+      <button (click)="navigateToDetail()" class="crear-success-btn crear-success-btn-primary">
+        <mat-icon fontSet="material-symbols-rounded" aria-hidden="true">visibility</mat-icon>
+        Ver detalle de la solicitud
+      </button>
+      <button (click)="navigateToDocuments()" class="crear-success-btn crear-success-btn-secondary">
+        <mat-icon fontSet="material-symbols-rounded" aria-hidden="true">folder_open</mat-icon>
+        Ir a Gestión Documental
+      </button>
+      <button (click)="navigateToWorkspace()" class="crear-success-btn crear-success-btn-secondary">
+        <mat-icon fontSet="material-symbols-rounded" aria-hidden="true">schema</mat-icon>
+        Ver en BPMN Workspace
+      </button>
+    </div>
+  </div>
+</div>
+}
+</div>

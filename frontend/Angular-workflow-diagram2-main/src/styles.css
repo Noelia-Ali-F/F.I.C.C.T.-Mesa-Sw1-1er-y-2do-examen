@@ -1,0 +1,786 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+@import 'tailwindcss';
+@import 'ng-diagram/styles.css';
+
+
+@theme {
+  /* ========================================================================
+     SISTEMA DE THEMES "PLUG & PLAY"
+     Para cambiar de tema, solo modifica los HEX de la sección :root abajo.
+     ======================================================================== */
+  --color-slate-900: var(--theme-border-text-color);
+  --color-slate-800: color-mix(in srgb, var(--theme-border-text-color) 80%, white);
+  --color-slate-700: color-mix(in srgb, var(--theme-border-text-color) 60%, white);
+  --color-slate-600: color-mix(in srgb, var(--theme-border-text-color) 40%, white);
+  
+  --color-slate-200: var(--theme-element-border-color);
+  --color-slate-100: var(--theme-surface-hover-color);
+  --color-slate-50:  var(--theme-surface-light-color);
+  
+  --color-white:     var(--theme-surface-color);
+  
+  --color-emerald-50:  var(--theme-primary-light-color);
+  --color-emerald-400: var(--theme-primary-hover-color);
+  --color-emerald-500: var(--theme-primary-color);
+  --color-emerald-600: var(--theme-primary-dark-color);
+  --color-emerald-700: var(--theme-primary-darker-color);
+  
+  --color-blue-400: var(--theme-secondary-color);
+  --color-blue-500: var(--theme-secondary-hover-color);
+  --color-blue-600: var(--theme-secondary-dark-color);
+}
+
+@layer base {
+  :root {
+    /* -------------------------------------------------------------------------- */
+    /* THEME ACTUAL: SLIM & SVELTE PREMIUM (Teal & Amber)                         */
+    /* -------------------------------------------------------------------------- */
+    
+    /* 1. Colores de la Estructura */
+    --theme-border-text-color: #0F172A; /* Slate 900 */
+    --theme-element-border-color: rgba(226, 232, 240, 0.7); 
+    --theme-surface-color: #FFFFFF;
+    --theme-surface-hover-color: #F1F5F9;
+    --theme-surface-light-color: #F8FAFC;
+    --theme-slate-500: #64748B;
+    
+    
+    /* 2. Color Primario (Teal Profundo) */
+    --theme-primary-color: #0F766E; 
+    --theme-primary-hover-color: #0D9488;
+    --theme-primary-light-color: rgba(15, 118, 110, 0.08);
+    --theme-primary-dark-color: #115E59;
+    --theme-primary-darker-color: #134E4A;
+    
+    /* 3. Color Secundario (Amber) */
+    --theme-secondary-color: #F59E0B; 
+    --theme-secondary-hover-color: #D97706; 
+    --theme-secondary-dark-color: #B45309;
+
+    /* 4. Glassmorphism & Shadows */
+    --theme-glass-bg: rgba(255, 255, 255, 0.85);
+    --theme-glass-blur: blur(12px);
+    --theme-shadow-sm: 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+    --theme-shadow-md: 0 8px 24px -4px rgba(15, 23, 42, 0.06);
+
+    /* 5. Transición Easing & Duración */
+    --duration-fast: 150ms;
+    --duration-normal: 250ms;
+    --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+
+    /* -------------------------------------------------------------------------- */
+    /* INTEGRACIÓN DE DISEÑO DE DIAGRAMAS (Tokens Globales para ng-diagram)      */
+    /* -------------------------------------------------------------------------- */
+    --ngd-diagram-background-color: var(--theme-surface-light-color);
+    --ngd-background-dot-color: rgba(15, 118, 110, 0.16);
+    --ngd-background-line-minor-color: rgba(15, 118, 110, 0.04);
+    --ngd-background-line-major-color: rgba(15, 118, 110, 0.08);
+    
+    --ngd-default-edge-stroke: rgba(100, 116, 139, 0.55);
+    --ngd-default-edge-stroke-hover: var(--theme-primary-hover-color);
+    --ngd-default-edge-stroke-selected: var(--theme-primary-color);
+    
+    --ngd-default-edge-label-color: var(--theme-border-text-color);
+    --ngd-default-edge-label-background-color: var(--theme-surface-color);
+    --ngd-default-edge-label-border-color: var(--theme-element-border-color);
+    
+    --ngd-port-size: 8px;
+    --ngd-port-background-color: var(--theme-surface-color);
+    --ngd-port-background-color-hover: var(--theme-primary-hover-color);
+    --ngd-port-border-size: 2px;
+    --ngd-port-border-color: var(--theme-primary-color);
+    
+    --ngd-resize-handle-background-color: var(--theme-primary-color);
+    --ngd-resize-handle-background-color-hover: var(--theme-primary-hover-color);
+    --ngd-resize-handle-background-color-active: var(--theme-primary-color);
+    --ngd-resize-handle-size: 8px;
+    
+    --ngd-minimap-background: var(--theme-glass-bg);
+    --ngd-minimap-border-color: var(--theme-element-border-color);
+    --ngd-minimap-border-radius: 0.85rem;
+    --ngd-minimap-viewport-stroke-color: var(--theme-primary-color);
+  }
+}
+
+/* ========================================================================
+   BASE Y ESTILOS GLOBALES DE NAVEGACIÓN
+   ======================================================================== */
+body {
+  font-family: 'Outfit', 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  background-color: var(--theme-surface-light-color);
+  color: var(--theme-border-text-color);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  font-weight: 500;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1 {
+  font-size: 2.25rem;
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--theme-border-text-color);
+}
+
+h2 {
+  font-size: 1.65rem;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--theme-border-text-color);
+}
+
+h3 {
+  font-size: 1.2rem;
+  font-weight: 750;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: var(--theme-border-text-color);
+}
+
+label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--theme-slate-500);
+}
+
+small, .text-xs {
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+/* Scrollbars Premium - Ultra-finos y elegantes */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.2);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.4);
+}
+
+/* ========================================================================
+   ANIMACIONES GLOBALES (Fuente Única — NO duplicar en componentes)
+   ======================================================================== */
+
+@keyframes wf-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes wf-slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes wf-scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in,
+.wf-animate-in {
+  animation: wf-fade-in 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-up {
+  animation: wf-slide-up 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.wf-animate-scale {
+  animation: wf-scale-in 250ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ========================================================================
+   TABLAS GLOBALES (wf-table-header / wf-table-row)
+   ======================================================================== */
+
+.wf-table-header {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--theme-slate-500);
+  padding: 0.85rem 1.5rem;
+  border-bottom: 1.5px solid var(--theme-element-border-color);
+  background: var(--theme-surface-light-color);
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+}
+
+.wf-table-row {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.35);
+  background: var(--theme-surface-color);
+  transition: all var(--duration-fast) var(--ease-smooth);
+}
+
+/* Zebra striping */
+.wf-table-row:nth-child(even) {
+  background: rgba(248, 250, 252, 0.4);
+}
+
+.wf-table-row:hover {
+  background: rgba(15, 118, 110, 0.02) !important;
+  transform: translateX(1px);
+}
+
+/* ========================================================================
+   COMPONENTES UI PREMIUM (Manual: Slim & Svelte)
+   ======================================================================== */
+
+/* 1. Tarjeta Premium (.wf-card) */
+.wf-card {
+  background: var(--theme-surface-color);
+  border: 1px solid var(--theme-element-border-color);
+  border-radius: 0.85rem;
+  box-shadow: var(--theme-shadow-sm);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wf-card:hover {
+  border-color: rgba(15, 118, 110, 0.2);
+  transform: translateY(-1px);
+  box-shadow: var(--theme-shadow-md);
+}
+
+/* 2. Cabecera de Vista Flotante (.wf-view-head) */
+.wf-view-head {
+  background: var(--theme-glass-bg);
+  backdrop-filter: var(--theme-glass-blur);
+  border: 1px solid var(--theme-element-border-color);
+  border-radius: 0.85rem;
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--theme-shadow-sm);
+}
+
+.wf-view-head-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.wf-view-head-mark {
+  width: 2.05rem;
+  height: 2.05rem;
+  background: linear-gradient(135deg, var(--theme-primary-color), var(--theme-primary-hover-color));
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.85rem;
+  box-shadow: 0 4px 10px rgba(15, 118, 110, 0.15);
+}
+
+/* 3. Inputs Premium (.wf-input) */
+.wf-input {
+  background: var(--theme-surface-color);
+  border: 1px solid var(--theme-element-border-color);
+  border-radius: 0.5rem;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.8125rem;
+  color: var(--theme-border-text-color);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wf-input:focus {
+  outline: none;
+  border-color: var(--theme-primary-color);
+  box-shadow: 0 0 0 1px var(--theme-primary-color);
+}
+
+.wf-input::placeholder {
+  color: #94A3B8;
+}
+
+/* 4. Botones Estilizados Slim */
+.wf-btn-primary {
+  background: linear-gradient(135deg, var(--theme-primary-color), var(--theme-primary-hover-color));
+  color: #ffffff;
+  border: 1px solid transparent;
+  padding: 0.55rem 1.25rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  border-radius: 2rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.12);
+  transition: all var(--duration-fast) var(--ease-smooth);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  outline: none;
+}
+
+.wf-btn-primary:hover {
+  transform: translateY(-1.5px) scale(1.02);
+  box-shadow: 0 6px 18px rgba(15, 118, 110, 0.24);
+  background: linear-gradient(135deg, var(--theme-primary-hover-color), var(--theme-primary-color));
+}
+
+.wf-btn-primary:active {
+  transform: translateY(0.5px) scale(0.98);
+  box-shadow: 0 2px 6px rgba(15, 118, 110, 0.15);
+}
+
+.wf-btn-primary:focus-visible {
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.35);
+}
+
+.wf-btn-secondary {
+  background: var(--theme-surface-color);
+  color: var(--theme-primary-color);
+  border: 1px solid var(--theme-element-border-color);
+  padding: 0.55rem 1.25rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  border-radius: 2rem;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.02);
+  transition: all var(--duration-fast) var(--ease-smooth);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  outline: none;
+}
+
+.wf-btn-secondary:hover {
+  transform: translateY(-1.5px) scale(1.02);
+  border-color: var(--theme-primary-color);
+  background: var(--theme-primary-light-color);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
+}
+
+.wf-btn-secondary:active {
+  transform: translateY(0.5px) scale(0.98);
+}
+
+.wf-btn-secondary:focus-visible {
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.2);
+}
+
+.wf-btn-ghost {
+  background: transparent;
+  color: var(--theme-slate-500);
+  border: 1px solid transparent;
+  padding: 0.55rem 1.25rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  border-radius: 2rem;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-smooth);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  outline: none;
+}
+
+.wf-btn-ghost:hover {
+  color: var(--theme-primary-color);
+  background: var(--theme-primary-light-color);
+  transform: translateY(-1px);
+}
+
+.wf-btn-ghost:active {
+  transform: translateY(0.5px) scale(0.98);
+}
+
+/* 5. Badges / Pastillas de Estado Slim */
+.wf-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.wf-badge-primary {
+  background-color: var(--theme-primary-light-color);
+  color: var(--theme-primary-color);
+  border: 1px solid rgba(15, 118, 110, 0.12);
+}
+
+.wf-badge-secondary {
+  background-color: rgba(245, 158, 11, 0.08);
+  color: var(--theme-secondary-dark-color);
+  border: 1px solid rgba(245, 158, 11, 0.15);
+}
+
+.wf-badge-slate {
+  background-color: #F1F5F9;
+  color: #475569;
+  border: 1px solid #E2E8F0;
+}
+
+/* ========================================================================
+   INTEGRACIÓN Y DISEÑO PREMIUM PARA EL MOTOR BPMN.JS / DIAGRAM-JS
+   ======================================================================== */
+
+/* 1. Contenedor Global y Fondo del Diagrama */
+.djs-container {
+  background-color: var(--theme-surface-light-color) !important;
+  font-family: 'Manrope Variable', 'Manrope', 'Outfit', sans-serif !important;
+  overflow: hidden !important;
+}
+
+.djs-container svg {
+  background: radial-gradient(rgba(15, 118, 110, 0.1) 1px, transparent 1px) !important;
+  background-size: 20px 20px !important;
+  background-color: var(--theme-surface-light-color) !important;
+}
+
+/* Ocultar elementos toscos por defecto del canvas */
+.djs-container .djs-outline {
+  stroke: var(--theme-element-border-color) !important;
+  stroke-dasharray: 3 3 !important;
+  stroke-width: 1px !important;
+}
+
+/* 2. Estilo Elegante para las Formas BPMN (Nodos, Gateways, Eventos) */
+.djs-shape .djs-visual > rect,
+.djs-shape .djs-visual > circle,
+.djs-shape .djs-visual > polygon,
+.djs-shape .djs-visual > path:not(.djs-connection) {
+  stroke: #475569 !important; /* Borde slate limpio */
+  stroke-width: 1.5px !important;
+  fill: var(--theme-surface-color) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* 3. Textos y Tipografías */
+.djs-container text {
+  font-family: 'Manrope Variable', 'Manrope', sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  fill: var(--theme-border-text-color) !important;
+  letter-spacing: -0.01em !important;
+}
+
+.djs-container .djs-label {
+  font-weight: 700 !important;
+  font-size: 11px !important;
+  fill: var(--theme-border-text-color) !important;
+}
+
+/* 4. Conexiones / Líneas de Flujo BPMN */
+.djs-connection .djs-visual > path {
+  stroke: rgba(71, 85, 105, 0.6) !important; /* Slate 600 transparente */
+  stroke-width: 2px !important;
+  transition: stroke 0.2s ease, stroke-width 0.2s ease !important;
+}
+
+/* 5. Estados Interactivos (Hover & Active) */
+.djs-element:hover:not(.djs-connection) .djs-visual > rect,
+.djs-element:hover:not(.djs-connection) .djs-visual > circle,
+.djs-element:hover:not(.djs-connection) .djs-visual > polygon {
+  stroke: var(--theme-primary-hover-color) !important;
+  stroke-width: 2px !important;
+  filter: drop-shadow(0 4px 12px rgba(15, 118, 110, 0.08));
+}
+
+.djs-element:hover.djs-connection .djs-visual > path {
+  stroke: var(--theme-primary-hover-color) !important;
+  stroke-width: 2.5px !important;
+}
+
+/* 6. Selección de Elementos */
+.djs-element.selected .djs-outline {
+  stroke: var(--theme-primary-color) !important;
+  stroke-width: 2px !important;
+  stroke-dasharray: 4 4 !important;
+}
+
+.djs-element.selected:not(.djs-connection) .djs-visual > rect,
+.djs-element.selected:not(.djs-connection) .djs-visual > circle,
+.djs-element.selected:not(.djs-connection) .djs-visual > polygon {
+  stroke: var(--theme-primary-color) !important;
+  stroke-width: 2px !important;
+  fill: var(--theme-primary-light-color) !important;
+}
+
+.djs-element.selected.djs-connection .djs-visual > path {
+  stroke: var(--theme-primary-color) !important;
+  stroke-width: 3px !important;
+}
+
+/* 7. Minimapa bpmn-js / diagram-js-minimap */
+.djs-minimap {
+  background-color: var(--theme-glass-bg) !important;
+  backdrop-filter: var(--theme-glass-blur) !important;
+  border: 1px solid var(--theme-element-border-color) !important;
+  border-radius: 0.85rem !important;
+  box-shadow: var(--theme-shadow-md) !important;
+  overflow: hidden !important;
+  margin: 1.25rem !important;
+  transition: opacity 0.2s ease !important;
+}
+
+.djs-minimap .viewport {
+  stroke: var(--theme-primary-color) !important;
+  stroke-width: 1.5px !important;
+  fill: rgba(15, 118, 110, 0.03) !important;
+}
+
+/* ========================================================================
+   DISEÑO PREMIUM PARA EL MOTOR NG-DIAGRAM
+   ======================================================================== */
+ng-diagram {
+  background-color: var(--ngd-diagram-background-color) !important;
+  border-radius: 0.85rem;
+}
+
+/* Adornos de selección e interactivos */
+.ng-diagram-node-selected-adornment {
+  border: 2px solid var(--theme-primary-color) !important;
+  border-radius: 0.85rem;
+  box-shadow: 0 0 0 4px var(--theme-primary-light-color) !important;
+}
+
+/* Conexión de Dibujo Temporal */
+ng-diagram-base-edge.temporary {
+  --edge-stroke: var(--theme-secondary-color) !important;
+  --edge-stroke-width: 2.5 !important;
+  --edge-stroke-dasharray: 4 4 !important;
+}
+
+/* ========================================================================
+   DISEÑO PREMIUM PARA EL MOTOR FOBLEX FLOW
+   ======================================================================== */
+.f-flow {
+  background-color: var(--theme-surface-light-color) !important;
+}
+
+.f-node {
+  background: var(--theme-surface-color) !important;
+  border: 1px solid var(--theme-element-border-color) !important;
+  border-radius: 0.75rem !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: var(--theme-shadow-sm) !important;
+}
+
+.f-node:hover {
+  border-color: rgba(15, 118, 110, 0.2) !important;
+  box-shadow: var(--theme-shadow-md) !important;
+  transform: translateY(-1px) !important;
+}
+
+.f-node-selected {
+  border-color: var(--theme-primary-color) !important;
+  box-shadow: 0 0 0 2px var(--theme-primary-light-color) !important;
+}
+
+.f-connection path {
+  stroke: rgba(100, 116, 139, 0.6) !important;
+  stroke-width: 2px !important;
+  transition: stroke 0.2s ease !important;
+}
+
+.f-connection:hover path {
+  stroke: var(--theme-primary-hover-color) !important;
+}
+
+.f-connection-selected path {
+  stroke: var(--theme-primary-color) !important;
+  stroke-width: 3px !important;
+}
+
+/* ========================================================================
+   DISEÑO PREMIUM PARA JOINTJS (workflow-map canvas)
+   ======================================================================== */
+.joint-paper {
+  background-color: var(--theme-surface-light-color) !important;
+}
+
+.joint-paper svg {
+  background: radial-gradient(rgba(15, 118, 110, 0.12) 1px, transparent 1px) !important;
+  background-size: 20px 20px !important;
+}
+
+.joint-paper foreignObject {
+  overflow: visible !important;
+}
+
+/* ========================================================================
+   RESPONSIVIDAD Y OPTIMIZACIONES PWA MÓVIL
+   ======================================================================== */
+
+/* 1. Safe areas para dispositivos con notch (iPhone etc.) */
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* 2. Prevenir comportamientos indeseados en PWAs standalone */
+@media (display-mode: standalone) {
+  body {
+    overscroll-behavior-y: contain;
+  }
+}
+
+/* 3. Optimizaciones táctiles en móvil */
+@media (max-width: 640px) {
+  button, a, [role="button"] {
+    min-height: 38px;
+  }
+  
+  /* Prevenir desbordamiento horizontal global */
+  main {
+    overflow-x: hidden;
+  }
+}
+
+/* 4. Safe area padding para PWAs fullscreen */
+@supports (padding: env(safe-area-inset-top)) {
+  .sticky {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* 5. Alinear de forma perfecta elementos mat-icon */
+mat-icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+  width: 1em !important;
+  height: 1em !important;
+}
+
+/* ── Centrado de Iconos y Tamaños Material ── */
+mat-icon.text-\[18px\] {
+  width: 18px !important;
+  height: 18px !important;
+  font-size: 18px !important;
+  line-height: 18px !important;
+}
+
+mat-icon.text-\[16px\] {
+  width: 16px !important;
+  height: 16px !important;
+  font-size: 16px !important;
+  line-height: 16px !important;
+}
+
+mat-icon.text-\[24px\] {
+  width: 24px !important;
+  height: 24px !important;
+  font-size: 24px !important;
+  line-height: 24px !important;
+}
+
+/* ── Definición de Material Symbols Rounded ── */
+.material-symbols-rounded,
+[fontset="material-symbols-rounded"] {
+  font-family: 'Material Symbols Rounded', 'Material Icons Rounded', 'Material Icons', sans-serif !important;
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'liga';
+}
+
+/* ========================================================================
+   PREVENCIÓN DE SCROLL DOBLE EN LIENZOS FULL-BLEED (DIAGRAMAS Y MAPAS)
+   ======================================================================== */
+.content-wrapper.is-full-bleed {
+  overflow: hidden !important; /* Desactiva scroll en el wrapper principal */
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.content-wrapper.is-full-bleed .page-container {
+  height: 100% !important;
+  max-height: 100vh !important;
+  width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+/* Asegurar que el anfitrión del componente de mapa o bpmn ocupe todo el espacio libre de forma fluida */
+app-workflow-map,
+.wf-ws-shell {
+  flex: 1 !important;
+  height: 100% !important;
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+/* Evitar que modales u overlays rompan en dispositivos táctiles */
+.wf-ws-modal-overlay,
+.wf-drilldown-overlay {
+  backdrop-filter: blur(4px) !important;
+  background: rgba(15, 23, 42, 0.4) !important;
+  transition: opacity 0.25s ease !important;
+  z-index: 1000 !important;
+}
+
+/* ── Premium Custom Slate Tooltips (Replacing native browser titles) ── */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%) scale(0.9);
+  background: #0f172a;
+  color: #ffffff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+  z-index: 1000;
+  text-transform: none;
+}
+
+[data-tooltip]:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+@import 'jspreadsheet-ce/dist/jspreadsheet.css';
+@import 'jsuites/dist/jsuites.css';

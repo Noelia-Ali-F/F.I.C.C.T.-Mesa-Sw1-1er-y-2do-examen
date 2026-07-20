@@ -1,0 +1,590 @@
+/* ── Premium Folder Management Styles ── */
+:host {
+  display: block;
+  background: var(--theme-surface-light-color);
+  min-height: calc(100vh - 4.5rem);
+}
+
+/* Base custom dropdown list styling */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%230f766e' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+  background-position: right 0.65rem center;
+  background-repeat: no-repeat;
+  background-size: 1rem;
+  padding-right: 2.25rem !important;
+  transition: all 0.2s var(--ease-smooth);
+}
+
+select:focus {
+  border-color: var(--theme-primary-color) !important;
+  box-shadow: 0 0 0 2px var(--theme-primary-light-color);
+}
+
+/* Centering Material symbols */
+mat-icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+  width: 1em !important;
+  height: 1em !important;
+}
+
+/* ── Premium Sidebar & Folder Directory Tree ── */
+.directory-sidebar {
+  background: #ffffff;
+  border: 1px solid var(--theme-element-border-color);
+  border-radius: 1.25rem;
+  box-shadow: var(--theme-shadow-sm);
+  padding: 1.5rem;
+  transition: all 0.3s var(--ease-smooth);
+  position: sticky;
+  top: 1.5rem;
+}
+
+.directory-sidebar:hover {
+  border-color: rgba(15, 118, 110, 0.15);
+  box-shadow: var(--theme-shadow-md);
+}
+
+.sidebar-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+}
+
+.sidebar-heading {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--theme-slate-500);
+  letter-spacing: 0.08em;
+  margin: 0;
+}
+
+/* Folder list container */
+.folder-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
+}
+
+/* Elegant Folder Card */
+.folder-node-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  background: #ffffff;
+  border: 1px solid var(--theme-element-border-color);
+  border-radius: 1rem;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  overflow: hidden;
+}
+
+.folder-node-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--theme-primary-color);
+  border-radius: 0 4px 4px 0;
+  opacity: 0;
+  transform: scaleY(0.3);
+  transition: all 0.25s var(--ease-smooth);
+}
+
+.folder-node-card:hover {
+  background: var(--theme-surface-hover-color);
+  border-color: rgba(15, 118, 110, 0.2);
+  transform: translateX(3px);
+}
+
+.folder-node-card.is-active {
+  background: var(--theme-primary-light-color);
+  border-color: rgba(15, 118, 110, 0.25);
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.04);
+}
+
+.folder-node-card.is-active::before {
+  opacity: 1;
+  transform: scaleY(1);
+}
+
+/* Folder Icon Wrapper with soft gradient background */
+.folder-icon-box {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--theme-surface-light-color);
+  border: 1px solid var(--theme-element-border-color);
+  color: var(--theme-slate-500);
+  transition: all 0.25s var(--ease-smooth);
+  flex-shrink: 0;
+}
+
+.folder-node-card.is-active .folder-icon-box {
+  background: linear-gradient(135deg, var(--theme-primary-color), var(--theme-primary-hover-color));
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 10px rgba(15, 118, 110, 0.15);
+}
+
+.folder-node-card:hover:not(.is-active) .folder-icon-box {
+  color: var(--theme-primary-color);
+  border-color: rgba(15, 118, 110, 0.15);
+}
+
+.folder-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  overflow: hidden;
+}
+
+.folder-label-title {
+  font-size: 0.8rem;
+  font-weight: 750;
+  color: var(--theme-border-text-color);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.folder-label-subtitle {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--theme-slate-500);
+  letter-spacing: 0.03em;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.folder-status-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--theme-primary-color);
+}
+
+/* Badge count for tickets */
+.folder-counter-badge {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.25rem 0.55rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--theme-element-border-color);
+  background: var(--theme-surface-light-color);
+  color: var(--theme-slate-500);
+  transition: all 0.25s var(--ease-smooth);
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+.folder-node-card.is-active .folder-counter-badge {
+  background: var(--theme-primary-color);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(15, 118, 110, 0.15);
+}
+
+.folder-node-card.has-tickets:not(.is-active) .folder-counter-badge {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.18);
+  color: var(--theme-secondary-dark-color);
+}
+
+/* ── Ticket File Cards ── */
+.ticket-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ticket-item-card {
+  background: #ffffff;
+  border: 1px solid var(--theme-element-border-color);
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+  cursor: pointer;
+  box-shadow: var(--theme-shadow-sm);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.ticket-item-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(15, 118, 110, 0.2);
+  box-shadow: var(--theme-shadow-md);
+}
+
+.ticket-item-card.is-selected {
+  border-color: var(--theme-primary-color);
+  background: var(--theme-primary-light-color);
+  box-shadow: 0 6px 20px rgba(15, 118, 110, 0.05);
+}
+
+.ticket-item-card.is-selected::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 16px 16px 0;
+  border-color: transparent var(--theme-primary-color) transparent transparent;
+}
+
+.ticket-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+}
+
+.ticket-code-tag {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--theme-slate-500);
+  background: var(--theme-surface-hover-color);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--theme-element-border-color);
+  letter-spacing: 0.02em;
+}
+
+.ticket-card-title {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--theme-border-text-color);
+  margin: 0;
+  line-clamp: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  line-height: 1.3;
+}
+
+.ticket-card-desc {
+  font-size: 0.76rem;
+  font-weight: 550;
+  color: var(--theme-slate-500);
+  line-height: 1.45;
+  margin: 0.5rem 0 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ticket-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1.25rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--theme-element-border-color);
+}
+
+.ticket-date-lbl {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--theme-slate-500);
+  letter-spacing: 0.03em;
+}
+
+.ticket-owner-tag {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--theme-border-text-color);
+  background: var(--theme-surface-hover-color);
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--theme-element-border-color);
+}
+
+/* ── Detailed Inspector Panel ── */
+.inspector-card {
+  background: #ffffff;
+  border: 1px solid var(--theme-element-border-color);
+  border-radius: 1.5rem;
+  padding: 1.75rem;
+  box-shadow: var(--theme-shadow-sm);
+  transition: all 0.3s var(--ease-smooth);
+}
+
+.inspector-card:hover {
+  border-color: rgba(15, 118, 110, 0.15);
+  box-shadow: var(--theme-shadow-md);
+}
+
+.inspector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--theme-element-border-color);
+}
+
+.inspector-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.inspector-icon-wrapper {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--theme-primary-light-color);
+  color: var(--theme-primary-color);
+  border: 1px solid rgba(15, 118, 110, 0.12);
+  flex-shrink: 0;
+}
+
+.inspector-title-h3 {
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: var(--theme-border-text-color);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.inspector-subtitle {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--theme-slate-500);
+  letter-spacing: 0.05em;
+  margin-top: 0.15rem;
+}
+
+/* Metadata group cards */
+.metadata-grid {
+  background: var(--theme-surface-light-color);
+  border: 1px solid var(--theme-element-border-color);
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.metadata-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--theme-slate-500);
+  letter-spacing: 0.06em;
+  display: block;
+  margin-bottom: 0.15rem;
+}
+
+.metadata-value {
+  font-size: 0.8rem;
+  font-weight: 750;
+  color: var(--theme-border-text-color);
+}
+
+.metadata-value.code {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--theme-primary-color);
+}
+
+/* Dynamic DMS Attached lists */
+.dms-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dms-item {
+  border: 1px solid var(--theme-element-border-color);
+  background: #ffffff;
+  border-radius: 1.25rem;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  transition: all 0.25s var(--ease-smooth);
+  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.01);
+}
+
+.dms-item:hover {
+  border-color: rgba(15, 118, 110, 0.25);
+  background: var(--theme-primary-light-color);
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.04);
+}
+
+.dms-item-icon-box {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(245, 158, 11, 0.06);
+  color: var(--theme-secondary-hover-color);
+  border: 1px solid rgba(245, 158, 11, 0.12);
+  flex-shrink: 0;
+  transition: all 0.25s var(--ease-smooth);
+}
+
+.dms-item:hover .dms-item-icon-box {
+  background: var(--theme-secondary-color);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 8px rgba(245, 158, 11, 0.2);
+}
+
+.dms-item-title {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--theme-border-text-color);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dms-item-meta {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--theme-slate-500);
+  letter-spacing: 0.02em;
+  margin-top: 0.1rem;
+}
+
+.dms-item-action-btn {
+  height: 2.25rem;
+  width: 2.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--theme-element-border-color);
+  background: #ffffff;
+  color: var(--theme-primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-smooth);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.dms-item-action-btn:hover {
+  background: var(--theme-primary-color);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(15, 118, 110, 0.25);
+  transform: translateY(-1px);
+}
+
+/* ── Moving folder overlay and alerts ── */
+.moving-panel-alert {
+  background: rgba(245, 158, 11, 0.05);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: var(--theme-shadow-sm);
+  animation: fadeIn 0.25s var(--ease-smooth) forwards;
+}
+
+.moving-alert-icon-box {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--theme-secondary-hover-color);
+  flex-shrink: 0;
+}
+
+.moving-alert-title {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--theme-secondary-dark-color);
+  margin: 0;
+}
+
+.moving-alert-subtitle {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--theme-secondary-dark-color);
+  opacity: 0.8;
+  letter-spacing: 0.02em;
+}
+
+/* Empty states */
+.empty-state-card {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background: var(--theme-surface-light-color);
+  border: 1px dashed var(--theme-element-border-color);
+  border-radius: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.empty-state-icon {
+  font-size: 2.25rem !important;
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  color: var(--theme-slate-500);
+  opacity: 0.65;
+}
+
+.empty-state-text {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--theme-slate-500);
+  font-style: italic;
+  margin: 0;
+}
+
+/* ── Sticky Dossier Inspector Panel ── */
+.sticky-inspector {
+  position: sticky;
+  top: 1.5rem;
+  max-height: calc(100vh - 8rem);
+  overflow-y: auto;
+  padding-right: 4px;
+}

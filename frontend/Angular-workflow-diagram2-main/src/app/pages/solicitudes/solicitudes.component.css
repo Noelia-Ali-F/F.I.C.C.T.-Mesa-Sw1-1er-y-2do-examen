@@ -1,0 +1,33 @@
+/* ── Solicitudes Component Styles ── */
+/* Animations + scrollbar are defined globally in styles.css — DO NOT duplicate */
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+/* Custom chevron icon for select dropdowns */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.25rem;
+  padding-right: 2.25rem !important;
+}
+
+/* Compact table header monospace font */
+table th {
+  letter-spacing: 0.08em;
+  font-family: monospace;
+}
+
+/* Dossier card hover micro-interactions */
+.group {
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.group:hover {
+  transform: translateY(-2px);
+}

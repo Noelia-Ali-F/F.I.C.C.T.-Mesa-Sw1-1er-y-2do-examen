@@ -1,0 +1,33 @@
+spring:
+  data:
+    mongodb:
+      # En producción tomará la URL de la variable de entorno MONGO_URI
+      uri: ${MONGO_URI}
+
+  ai:
+    vertex:
+      ai:
+        gemini:
+          project-id: ${GCP_PROJECT_ID:${VERTEX_AI_PROJECT_ID:}}
+          location: us-central1
+          chat:
+              options:
+                model: gemini-2.5-flash
+                temperature: 0.1
+
+server:
+  port: ${PORT:8080}
+
+logging:
+  level:
+    root: INFO
+    com.workflow: INFO
+
+app:
+  uploads:
+    dir: /tmp/uploads
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:*}
+  firebase:
+    project-id: ${FIREBASE_PROJECT_ID:}
+    # credentials-path se omite en Cloud Run; Google ADC lo detecta automáticamente.

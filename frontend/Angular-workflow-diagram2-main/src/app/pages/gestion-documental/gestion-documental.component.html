@@ -1,0 +1,1049 @@
+<div class="gestion-documental-container animate-fade-in pb-16 space-y-6 max-w-7xl mx-auto px-4 sm:px-6">
+
+  <!-- Unified Page Header -->
+  <app-page-header
+    title="Gestión Documental (DMS)"
+    subtitle="Repositorio de Almacenamiento y Control de Versiones"
+    eyebrow="EXPEDIENTES SEGURE"
+    icon="folder_shared"
+    gradientClasses="from-teal-500 via-emerald-400 to-indigo-500"
+  >
+    <!-- Header Actions projected to the right -->
+    <button
+      (click)="mostrarGuiaNegocio.set(true)"
+      class="flex items-center gap-1.5 px-4.5 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 bg-white border border-slate-200/80 rounded-xl shadow-sm hover:shadow transition-all duration-200 cursor-pointer"
+      data-tooltip="Ver manual y lineamientos estratégicos de redacción y DMS"
+    >
+      <mat-icon fontSet="material-symbols-rounded" class="!text-sm font-bold text-slate-500">menu_book</mat-icon>
+      <span>Guía de Flujo</span>
+    </button>
+    <button
+      (click)="abrirModalCrear()"
+      class="flex items-center gap-1.5 px-5 py-2.5 text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white rounded-xl shadow-sm hover:shadow transition-all duration-200 cursor-pointer"
+      data-tooltip="Cargar un nuevo archivo físico o iniciar un borrador online"
+    >
+      <mat-icon fontSet="material-symbols-rounded" class="!text-sm font-bold">add_box</mat-icon>
+      <span>Nuevo Documento</span>
+    </button>
+  </app-page-header>
+
+  <!-- KPI Telemetry Bar -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <!-- Stat Card: Total -->
+    <div class="telemetry-card" data-tooltip="Total de expedientes y borradores registrados en el DMS">
+      <div class="space-y-1">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Total Expedientes</span>
+        <p class="text-2xl sm:text-3xl font-black text-slate-900 leading-none">{{ documentos().length }}</p>
+      </div>
+      <div class="telemetry-icon-box">
+        <mat-icon fontSet="material-symbols-rounded" class="!text-base font-bold">folder</mat-icon>
+      </div>
+    </div>
+    
+    <!-- Stat Card: Archivos Físicos -->
+    <div class="telemetry-card" data-tooltip="Archivos físicos subidos (PDF, imágenes, hojas de cálculo...)">
+      <div class="space-y-1">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Archivos Físicos</span>
+        <p class="text-2xl sm:text-3xl font-black text-emerald-500 leading-none">{{ documentosFisicosCount() }}</p>
+      </div>
+      <div class="telemetry-icon-box teal">
+        <mat-icon fontSet="material-symbols-rounded" class="!text-base font-bold">description</mat-icon>
+      </div>
+    </div>
+
+    <!-- Stat Card: Collaborative Online -->
+    <div class="telemetry-card" data-tooltip="Borradores colaborativos en redacción online activa">
+      <div class="space-y-1">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Borradores en Línea</span>
+        <p class="text-2xl sm:text-3xl font-black text-indigo-600 leading-none">{{ documentosOnlineCount() }}</p>
+      </div>
+      <div class="telemetry-icon-box indigo">
+        <mat-icon fontSet="material-symbols-rounded" class="!text-base font-bold">edit_note</mat-icon>
+      </div>
+    </div>
+
+    <!-- Stat Card: Bloqueados (En edición) -->
+    <div class="telemetry-card" data-tooltip="Archivos bloqueados por edición simultánea en ProseMirror">
+      <div class="space-y-1">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Ediciones Activas</span>
+        <p class="text-2xl sm:text-3xl font-black text-rose-600 leading-none">{{ documentosBloqueadosCount() }}</p>
+      </div>
+      <div class="telemetry-icon-box rose" [class.animate-pulse]="documentosBloqueadosCount() > 0">
+        <mat-icon fontSet="material-symbols-rounded" class="!text-base font-bold">lock</mat-icon>
+      </div>
+    </div>
+  </div>
+
+  <!-- Segmented Tabs for Catalog Categories -->
+  <div class="tab-pill-bar">
+    <button
+      (click)="filtroTipo = 'TODOS'; aplicarFiltro()"
+      [class.is-active]="filtroTipo === 'TODOS'"
+      class="tab-pill-btn"
+      data-tooltip="Mostrar todo el catálogo documental"
+    >
+      <mat-icon fontSet="material-symbols-rounded" class="!text-sm">folder_open</mat-icon>
+      <span>Todos los Expedientes</span>
+      <span class="ml-1.5 px-2 py-0.5 text-[10px] font-black rounded-full bg-slate-100 text-slate-600 border border-slate-200/55">
+        {{ documentos().length }}
+      </span>
+    </button>
+
+    <button
+      (click)="filtroTipo = 'FILE'; aplicarFiltro()"
+      [class.is-active]="filtroTipo === 'FILE'"
+      class="tab-pill-btn"
+      data-tooltip="Filtrar únicamente archivos físicos subidos"
+    >
+      <mat-icon fontSet="material-symbols-rounded" class="!text-sm">description</mat-icon>
+      <span>Archivos Físicos</span>
+      <span class="ml-1.5 px-2 py-0.5 text-[10px] font-black rounded-full bg-teal-50 text-teal-700 border border-teal-100">
+        {{ documentosFisicosCount() }}
+      </span>
+    </button>
+
+    <button
+      (click)="filtroTipo = 'COLLABORATIVE'; aplicarFiltro()"
+      [class.is-active]="filtroTipo === 'COLLABORATIVE'"
+      class="tab-pill-btn"
+      data-tooltip="Filtrar únicamente borradores redactados online"
+    >
+      <mat-icon fontSet="material-symbols-rounded" class="!text-sm">edit_note</mat-icon>
+      <span>Borradores Online</span>
+      <span class="ml-1.5 px-2 py-0.5 text-[10px] font-black rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
+        {{ documentosOnlineCount() }}
+      </span>
+    </button>
+
+    <button
+      (click)="filtroTipo = 'BLOQUEADOS'; aplicarFiltro()"
+      [class.is-active]="filtroTipo === 'BLOQUEADOS'"
+      class="tab-pill-btn danger-tab"
+      data-tooltip="Mostrar borradores con tokens de escritura retenidos"
+    >
+      <mat-icon fontSet="material-symbols-rounded" class="!text-sm" [class.animate-pulse]="documentosBloqueadosCount() > 0">lock</mat-icon>
+      <span>Bloqueados / Edición</span>
+      <span class="ml-1.5 px-2 py-0.5 text-[10px] font-black rounded-full bg-rose-50 text-rose-700 border border-rose-100" [class.animate-pulse]="documentosBloqueadosCount() > 0">
+        {{ documentosBloqueadosCount() }}
+      </span>
+    </button>
+  </div>
+
+  <!-- Search & Catalog Filtering Bar -->
+  <section class="bg-white border border-slate-200/80 p-4 rounded-2xl shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+    <!-- Search Field -->
+    <div class="relative flex-1 min-w-[280px]">
+      <mat-icon fontSet="material-symbols-rounded" class="absolute left-3.5 top-1/2 -translate-y-1/2 !text-slate-400 !text-lg">search</mat-icon>
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        (input)="buscar()"
+        placeholder="Buscar expedientes por título, descripción..."
+        class="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 border border-slate-250/80 text-sm font-semibold text-slate-800 outline-none rounded-xl placeholder:text-slate-450 focus:border-teal-500/60 focus:bg-white transition"
+        data-tooltip="Buscar coincidencia exacta en campos del catálogo"
+      />
+    </div>
+
+    <!-- Filters Toggle Deck -->
+    <div class="flex flex-wrap items-center gap-4 shrink-0">
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Ordenación</span>
+        <select 
+          [(ngModel)]="filtroOrden" 
+          (change)="aplicarFiltro()" 
+          class="bg-white border border-slate-250/80 px-3 py-2 text-xs font-bold text-slate-700 rounded-xl outline-none shadow-sm cursor-pointer hover:bg-slate-50/50 transition-colors"
+          data-tooltip="Criterio de ordenación alfabético, cronológico o de control"
+        >
+          <option value="RECIENTE">Más recientes</option>
+          <option value="VERSION">Mayor versión</option>
+          <option value="ALFABETICO">Alfabético</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <!-- Split Catalog Canvas Grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    
+    <!-- LEFT PANEL: Documents Dossier List (7 cols) -->
+    <div class="lg:col-span-7 space-y-3">
+      @if (cargando()) {
+        <div class="bg-white border border-slate-200/80 p-12 text-center rounded-2xl shadow-sm flex flex-col items-center justify-center gap-3">
+          <div class="h-8 w-8 border-3 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
+          <p class="text-xs font-black text-slate-500 uppercase tracking-widest animate-pulse">Sincronizando Archivos...</p>
+        </div>
+      } @else if (documentosFiltrados().length === 0) {
+        <div class="bg-white border border-dashed border-slate-250/80 p-12 text-center rounded-2xl shadow-sm flex flex-col items-center justify-center gap-4">
+          <div class="h-12 w-12 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 border border-slate-100">
+            <mat-icon fontSet="material-symbols-rounded" class="!text-2xl">receipt_long</mat-icon>
+          </div>
+          <div class="space-y-1">
+            <h3 class="text-xs font-black uppercase text-slate-800">No se encontraron expedientes</h3>
+            <p class="text-xs text-slate-450 font-bold uppercase tracking-wider max-w-sm mx-auto leading-normal">
+              Suba un archivo físico o cree un borrador en línea para comenzar.
+            </p>
+          </div>
+        </div>
+      } @else {
+        <div class="space-y-3">
+          @for (doc of documentosFiltrados(); track doc.id) {
+            <div
+              (click)="seleccionarDocumento(doc)"
+              class="doc-item-card"
+              [class.is-selected]="seleccionado()?.id === doc.id"
+              data-tooltip="Haga clic para auditar la trazabilidad y las versiones de este archivo"
+            >
+              <!-- Extension Type Custom Badge -->
+              <div 
+                class="shrink-0 w-11 h-11 border rounded-xl flex flex-col items-center justify-center font-black text-[10px] uppercase tracking-wider shadow-inner"
+                [class.bg-indigo-50]="doc.tipo === 'COLLABORATIVE'" [class.border-indigo-150]="doc.tipo === 'COLLABORATIVE'" [class.text-indigo-700]="doc.tipo === 'COLLABORATIVE'"
+                [class.bg-rose-50]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'PDF'"
+                [class.border-rose-150]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'PDF'"
+                [class.text-rose-700]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'PDF'"
+                [class.bg-teal-50]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'IMG'"
+                [class.border-teal-150]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'IMG'"
+                [class.text-teal-700]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'IMG'"
+                [class.bg-blue-50]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'DOC'"
+                [class.border-blue-150]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'DOC'"
+                [class.text-blue-700]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'DOC'"
+                [class.bg-emerald-50]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'XLS'"
+                [class.border-emerald-150]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'XLS'"
+                [class.text-emerald-700]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'XLS'"
+                [class.bg-slate-50]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'TXT'"
+                [class.border-slate-200]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'TXT'"
+                [class.text-slate-600]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'TXT'"
+                data-tooltip="Formato de archivo"
+              >
+                @if (doc.tipo === 'COLLABORATIVE') {
+                  <span>TXT</span>
+                } @else {
+                  <span>{{ getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) }}</span>
+                }
+              </div>
+
+              <!-- Information Details -->
+              <div class="flex-1 min-w-0 space-y-1.5">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h4 class="text-sm font-black text-slate-900 truncate uppercase tracking-tight">{{ doc.nombre }}</h4>
+                  <span class="bg-slate-100 border border-slate-200 text-slate-600 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase" data-tooltip="Número de versión actual">v{{ doc.versionActual }}</span>
+                  @if (doc.bloqueadoPor) {
+                    <span class="bg-rose-50 border border-rose-100 text-rose-700 px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase flex items-center gap-1" [attr.data-tooltip]="'Bloqueado temporalmente por ' + doc.bloqueadoPor">
+                      <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                      Bloqueado
+                    </span>
+                  }
+                </div>
+                <p class="text-xs text-slate-600 truncate font-semibold">{{ doc.descripcion || 'Sin descripción adicional.' }}</p>
+                
+                <div class="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider flex-wrap">
+                  <span>Actualizado: {{ doc.fechaActualizacion | date:'dd/MM/yyyy HH:mm' }}</span>
+                  <span class="h-1 w-1 bg-slate-300 rounded-full"></span>
+                  <span>Por: <b class="text-slate-600">{{ doc.creadoPor }}</b></span>
+                </div>
+              </div>
+
+              <!-- Right Quick Action Links -->
+              <div class="flex items-center gap-1.5 self-center" (click)="$event.stopPropagation()">
+                @if (doc.solicitudId) {
+                  <button
+                    (click)="irADetalle(doc.solicitudId, $event)"
+                    class="w-8 h-8 bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-600 flex items-center justify-center rounded-xl transition-all cursor-pointer shadow-sm animate-fade-in"
+                    data-tooltip="Ver ficha del expediente y solicitud asociada"
+                  >
+                    <mat-icon fontSet="material-symbols-rounded" class="!text-sm font-bold">open_in_new</mat-icon>
+                  </button>
+                }
+                <a
+                  routerLink="/bpmn-workspace"
+                  target="_blank"
+                  class="w-8 h-8 bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-600 flex items-center justify-center rounded-xl transition-all shadow-sm"
+                  data-tooltip="Ver en el mapa de modelador y flujos de proceso BPMN"
+                >
+                  <mat-icon fontSet="material-symbols-rounded" class="!text-sm font-bold">account_tree</mat-icon>
+                </a>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- RIGHT PANEL: Dossier Metadata & Control Inspector (5 cols) -->
+    <div class="lg:col-span-5">
+      @if (seleccionado(); as doc) {
+        <div class="inspector-sticky-card">
+          <!-- Top visual gradient border -->
+          <div 
+            class="h-1.5 w-full bg-gradient-to-r"
+            [class.from-indigo-500]="doc.tipo === 'COLLABORATIVE'"
+            [class.to-indigo-400]="doc.tipo === 'COLLABORATIVE'"
+            [class.from-teal-500]="doc.tipo === 'FILE'"
+            [class.to-teal-400]="doc.tipo === 'FILE'"
+          ></div>
+          
+          <div class="p-5 space-y-5">
+            <!-- Mockup File Graphics Box -->
+            <div class="bg-slate-50/60 border border-slate-200/60 p-4 rounded-xl flex flex-col items-center justify-center text-center relative select-none">
+              <!-- Available / Lock Status Badge -->
+              <div class="absolute top-2.5 right-2.5 flex items-center gap-1.5">
+                @if (doc.bloqueadoPor) {
+                  <span class="flex h-2 w-2 relative">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                  </span>
+                  <span class="text-[10px] font-extrabold text-rose-600 uppercase tracking-widest bg-rose-50 border border-rose-100 px-2.5 py-0.5 rounded-lg" [attr.data-tooltip]="'Bloqueado por ' + doc.bloqueadoPor">En Edición</span>
+                } @else {
+                  <span class="text-[10px] font-extrabold text-emerald-700 uppercase tracking-widest bg-emerald-50 border border-emerald-100 px-2.5 py-0.5 rounded-lg" data-tooltip="Documento liberado y disponible para descargar o modificar">Disponible</span>
+                }
+              </div>
+
+              <!-- Big Graphic Representation -->
+              <div 
+                class="h-14 w-14 rounded-xl flex items-center justify-center border shadow-sm mb-2 relative transition-transform hover:scale-105"
+                [class.bg-indigo-50]="doc.tipo === 'COLLABORATIVE'" [class.border-indigo-200]="doc.tipo === 'COLLABORATIVE'" [class.text-indigo-600]="doc.tipo === 'COLLABORATIVE'"
+                [class.bg-rose-50]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'PDF'"
+                [class.border-rose-200]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'PDF'"
+                [class.text-rose-600]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'PDF'"
+                [class.bg-teal-50]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'IMG'"
+                [class.border-teal-200]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'IMG'"
+                [class.text-teal-600]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'IMG'"
+                [class.bg-blue-50]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'DOC'"
+                [class.border-blue-200]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'DOC'"
+                [class.text-blue-600]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'DOC'"
+                [class.bg-emerald-50]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'XLS'"
+                [class.border-emerald-200]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'XLS'"
+                [class.text-emerald-600]="doc.tipo === 'FILE' && getFileTypeLabel(doc.versiones[doc.versiones.length - 1]?.tipoContenido) === 'XLS'"
+                data-tooltip="Formato del expediente"
+              >
+                <mat-icon fontSet="material-symbols-rounded" class="!text-2xl font-bold">
+                  {{ doc.tipo === 'COLLABORATIVE' ? 'edit_note' : 'description' }}
+                </mat-icon>
+                <span class="absolute bottom-0.5 right-0.5 px-1 bg-white border rounded text-[9px] font-black text-slate-500 uppercase tracking-widest shadow-sm">
+                  v{{ doc.versionActual }}
+                </span>
+              </div>
+
+              <h3 class="text-xs font-black text-slate-800 uppercase tracking-tight max-w-[200px] truncate leading-none mt-1">{{ doc.nombre }}</h3>
+              <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">{{ doc.tipo === 'COLLABORATIVE' ? 'Documento de Redacción Online' : 'Archivo Físico' }}</span>
+            </div>
+
+            <!-- Detailed Properties Grid -->
+            <div class="property-grid-card">
+              <div class="space-y-0.5" data-tooltip="Usuario responsable que cargó la primera versión">
+                <span class="text-xs font-bold text-slate-400 uppercase block tracking-wider">Creador</span>
+                <p class="text-xs font-semibold text-slate-700 uppercase truncate">{{ doc.creadoPor }}</p>
+              </div>
+              <div class="space-y-0.5" data-tooltip="Fecha en la que se dio de alta en el sistema">
+                <span class="text-xs font-bold text-slate-400 uppercase block tracking-wider">Fecha Registro</span>
+                <p class="text-xs font-semibold text-slate-700 truncate">{{ doc.fechaCreacion | date:'dd/MM/yyyy' }}</p>
+              </div>
+              <div class="space-y-0.5" data-tooltip="Última modificación realizada">
+                <span class="text-xs font-bold text-slate-400 uppercase block tracking-wider">Última Modificación</span>
+                <p class="text-xs font-semibold text-slate-700 truncate">{{ doc.fechaActualizacion | date:'dd/MM/yyyy HH:mm' }}</p>
+              </div>
+              <div class="space-y-0.5" data-tooltip="Cantidad de hitos de versión archivados">
+                <span class="text-xs font-bold text-slate-400 uppercase block tracking-wider">Historial Cambios</span>
+                <p class="text-xs font-semibold text-slate-700 uppercase">{{ doc.versiones.length }} {{ doc.versiones.length === 1 ? 'Versión' : 'Versiones' }}</p>
+              </div>
+            </div>
+
+            <!-- Interactive Inline Timeline (Mini Versions Deck) -->
+            <div class="space-y-2.5">
+              <div class="flex justify-between items-center px-1">
+                <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Historial Reciente</span>
+                <span class="text-[10px] font-bold text-emerald-500 uppercase">{{ doc.versiones.length }} Hitos</span>
+              </div>
+              <div class="version-deck" data-tooltip="Bitácora con los 3 últimos comentarios del historial">
+                @for (ver of doc.versiones.slice(-3).reverse(); track ver.version) {
+                  <div class="flex items-start gap-3 text-xs" [attr.data-tooltip]="'Comentario: ' + ver.comentarioCambio">
+                    <div class="h-5 w-5 rounded-full bg-teal-50 border border-teal-150 text-teal-600 flex items-center justify-center font-bold text-[9px] shrink-0 animate-fade-in">
+                      v{{ ver.version }}
+                    </div>
+                    <div class="flex-1 min-w-0 space-y-0.5">
+                      <div class="flex justify-between items-center text-[10px]">
+                        <span class="font-bold text-slate-700 truncate uppercase">{{ ver.subidoPor }}</span>
+                        <span class="text-slate-400 text-[9px]">{{ ver.fechaSubida | date:'dd/MM HH:mm' }}</span>
+                      </div>
+                      <p class="text-[11px] text-slate-500 leading-normal italic truncate">
+                        "{{ ver.comentarioCambio || 'Sin comentario de versión' }}"
+                      </p>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Interactive Telemetry Preview Widget -->
+            <div class="bg-indigo-50/20 border border-indigo-100 rounded-xl p-3.5 flex items-center justify-between gap-3 shadow-inner">
+              <div class="space-y-0.5">
+                <h5 class="text-xs font-bold text-indigo-900 uppercase flex items-center gap-1.5">
+                  <mat-icon fontSet="material-symbols-rounded" class="!text-sm">article</mat-icon>
+                  <span>Contenido & Comentarios</span>
+                </h5>
+                <p class="text-[10px] text-slate-450 font-bold uppercase tracking-wider leading-none">
+                  {{ doc.tipo === 'COLLABORATIVE' ? 'Ver borrador completo y notas' : 'Ver comentarios y notas' }}
+                </p>
+              </div>
+              <button
+                (click)="modalContenido.set(true)"
+                class="px-3.5 py-1.5 bg-white border border-indigo-200 hover:bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase rounded-lg transition shadow-sm cursor-pointer shrink-0"
+                data-tooltip="Inspeccionar el borrador o el comentario en pantalla completa"
+              >
+                Inspeccionar
+              </button>
+            </div>
+
+            <!-- Core Operations Actions -->
+            <div class="space-y-2.5">
+              @if (doc.tipo === 'COLLABORATIVE') {
+                @if (!doc.bloqueadoPor) {
+                  <button
+                    (click)="editarOnline(doc)"
+                    class="w-full flex items-center justify-center gap-1.5 px-5 py-2.5 text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white rounded-xl shadow-sm hover:shadow transition-all duration-200 cursor-pointer"
+                    data-tooltip="Abrir editor colaborativo online"
+                  >
+                    <mat-icon fontSet="material-symbols-rounded" class="!text-sm font-bold">edit</mat-icon>
+                    <span>Editar Documento</span>
+                  </button>
+                } @else if (doc.bloqueadoPor === authService.currentUser()?.username) {
+                  <div class="grid grid-cols-12 gap-2">
+                    <button
+                      (click)="editarOnline(doc)"
+                      class="col-span-10 flex items-center justify-center gap-1.5 px-5 py-2.5 text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white rounded-xl shadow-sm hover:shadow transition-all duration-200 cursor-pointer"
+                      data-tooltip="Continuar con la redacción del borrador en el editor online"
+                    >
+                      <mat-icon fontSet="material-symbols-rounded" class="!text-sm font-bold">rate_review</mat-icon>
+                      <span>Reanudar Escritura</span>
+                    </button>
+                    <button
+                      (click)="desbloquear(doc.id)"
+                      class="col-span-2 bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center rounded-xl cursor-pointer transition-all border border-rose-150 shadow-sm"
+                      data-tooltip="Liberar el bloqueo exclusivo del archivo"
+                    >
+                      <mat-icon fontSet="material-symbols-rounded" class="!text-base font-bold">lock_open</mat-icon>
+                    </button>
+                  </div>
+                } @else {
+                  <div class="border border-amber-200 bg-amber-50 rounded-xl p-3 text-[10px] font-black text-amber-800 uppercase flex items-center justify-center gap-2 shadow-inner"
+                    [attr.data-tooltip]="'Solo ' + doc.bloqueadoPor + ' puede alterar el borrador'">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                    <span>Documento bloqueado por: {{ doc.bloqueadoPor }}</span>
+                  </div>
+                }
+              } @else {
+                <div class="space-y-2.5">
+                  <div class="grid grid-cols-12 gap-2">
+                    <a
+                      [href]="archivoUrl(doc.versiones[doc.versiones.length - 1].nombreAlmacenado, true)"
+                      target="_blank"
+                      class="col-span-10 flex items-center justify-center gap-1.5 px-5 py-2.5 text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white rounded-xl shadow-sm hover:shadow transition-all duration-200 cursor-pointer text-center"
+                      data-tooltip="Descargar la versión física activa a su ordenador"
+                    >
+                      <mat-icon fontSet="material-symbols-rounded" class="!text-sm font-bold">download</mat-icon>
+                      <span>Descargar v{{ doc.versionActual }}</span>
+                    </a>
+                    <button
+                      (click)="abrirModalNuevaVersion()"
+                      class="col-span-2 bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-600 flex items-center justify-center cursor-pointer rounded-xl transition shadow-sm"
+                      data-tooltip="Cargar una nueva versión física actualizada de este archivo"
+                    >
+                      <mat-icon fontSet="material-symbols-rounded" class="!text-base font-bold">upload</mat-icon>
+                    </button>
+                  </div>
+                  <button
+                    (click)="abrirVisorLimpio(doc)"
+                    class="w-full bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 py-2.5 text-xs font-bold uppercase rounded-xl transition cursor-pointer shadow-sm"
+                    data-tooltip="Abrir visor integrado de previsualización"
+                  >
+                    Abrir Previsualización Visor
+                  </button>
+                </div>
+              }
+            </div>
+
+            <!-- Linked / Trazabilidad double row deck -->
+            <div class="grid grid-cols-3 gap-2">
+              @if (doc.solicitudId) {
+                <button
+                  (click)="irADetalle(doc.solicitudId, $event)"
+                  class="flex items-center justify-center gap-1.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 px-1 py-2.5 text-[10px] font-black uppercase text-slate-700 rounded-xl transition cursor-pointer shadow-sm"
+                  data-tooltip="Ver el expediente operativo y detalles del trámite"
+                >
+                  <mat-icon fontSet="material-symbols-rounded" class="!text-xs font-bold text-slate-500">link</mat-icon>
+                  <span>Trámite</span>
+                </button>
+              } @else {
+                <div class="flex items-center justify-center text-[9px] font-bold text-slate-400 bg-slate-50 border border-dashed rounded-xl px-1">Sin Trámite</div>
+              }
+
+              <button
+                (click)="abrirModalAsociar()"
+                class="flex items-center justify-center gap-1.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 px-1 py-2.5 text-[10px] font-black uppercase text-slate-700 rounded-xl transition cursor-pointer shadow-sm"
+                data-tooltip="Vincular o re-asociar este documento a otro folio de trámite"
+              >
+                <mat-icon fontSet="material-symbols-rounded" class="!text-xs font-bold text-slate-500">sync_alt</mat-icon>
+                <span>Vincular</span>
+              </button>
+
+              <button
+                (click)="abrirHistorialTrazabilidad(doc)"
+                class="flex items-center justify-center gap-1.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 px-1 py-2.5 text-[10px] font-black uppercase text-slate-700 rounded-xl transition cursor-pointer shadow-sm"
+                data-tooltip="Ver historial de auditoría completo de este expediente"
+              >
+                <mat-icon fontSet="material-symbols-rounded" class="!text-xs font-bold text-slate-500">history</mat-icon>
+                <span>Trazar</span>
+              </button>
+            </div>
+
+            <!-- Danger Zone Action Box -->
+            <div class="pt-4 border-t border-slate-150/70 mt-2 space-y-2">
+              <span class="text-xs font-bold text-rose-500 uppercase tracking-widest block px-1">Zona de Seguridad</span>
+              <div class="danger-zone-alert" data-tooltip="Borrar permanentemente el archivo. Esta acción no se puede deshacer.">
+                <div class="space-y-0.5">
+                  <h5 class="text-xs font-bold text-rose-800 uppercase">Eliminación Permanente</h5>
+                  <p class="text-[10px] text-slate-450 font-bold uppercase tracking-wider leading-none">Borrará el expediente y todo su historial</p>
+                </div>
+                <button
+                  (click)="eliminar(doc.id)"
+                  class="h-9 w-9 bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 flex items-center justify-center rounded-xl transition shadow-sm cursor-pointer shrink-0"
+                  title="Eliminar Documento"
+                >
+                  <mat-icon fontSet="material-symbols-rounded" class="!text-sm font-bold">delete_forever</mat-icon>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      } @else {
+        <!-- Empty detail panel placeholder -->
+        <div class="bg-white border border-slate-200/80 p-6 rounded-2xl shadow-sm sticky top-24 animate-fade-in">
+          <div class="flex flex-col items-center justify-center text-center py-16 px-4 gap-4">
+            <div class="h-12 w-12 bg-slate-50 rounded-full flex items-center justify-center text-slate-350 border border-slate-200/80">
+              <mat-icon fontSet="material-symbols-rounded" class="!text-2xl">source</mat-icon>
+            </div>
+            <div class="space-y-1">
+              <h4 class="text-xs font-black uppercase text-slate-800">Ningún expediente seleccionado</h4>
+              <p class="text-xs text-slate-400 font-bold uppercase tracking-wider max-w-[220px] mx-auto leading-normal">
+                Seleccione un ítem del catálogo para auditar su trazabilidad y versiones.
+              </p>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: CREAR DOCUMENTO -->
+@if (modalCrear()) {
+  <div class="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-fade-in">
+    <div class="bg-white p-6 shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto space-y-4 rounded-2xl border border-slate-200">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-tight">Agregar Expediente</h3>
+        <button (click)="cerrarModalCrear()" class="text-slate-400 hover:text-slate-800 text-xl font-bold cursor-pointer leading-none">×</button>
+      </div>
+
+      <form [formGroup]="crearForm" (ngSubmit)="crearDocumento()" class="space-y-4">
+        <!-- Document Type Selector -->
+        <div class="space-y-1">
+          <label class="text-[8.5px] font-extrabold uppercase text-slate-455 tracking-wider">Modo de Almacenamiento</label>
+          <div class="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              (click)="setTipoCreacion('FILE')"
+              class="border border-slate-200 px-3 py-2.5 text-xs font-bold uppercase transition-all rounded-xl cursor-pointer"
+              [class.bg-emerald-500]="tipoCreacion() === 'FILE'"
+              [class.text-white]="tipoCreacion() === 'FILE'"
+              [class.bg-slate-50]="tipoCreacion() !== 'FILE'"
+              [class.text-slate-600]="tipoCreacion() !== 'FILE'"
+            >
+              Cargar Archivo
+            </button>
+            <button
+              type="button"
+              (click)="setTipoCreacion('COLLABORATIVE')"
+              class="border border-slate-200 px-3 py-2.5 text-xs font-bold uppercase transition-all rounded-xl cursor-pointer"
+              [class.bg-emerald-500]="tipoCreacion() === 'COLLABORATIVE'"
+              [class.text-white]="tipoCreacion() === 'COLLABORATIVE'"
+              [class.bg-slate-50]="tipoCreacion() !== 'COLLABORATIVE'"
+              [class.text-slate-600]="tipoCreacion() !== 'COLLABORATIVE'"
+            >
+              Borrador Online
+            </button>
+            <button
+              type="button"
+              (click)="setTipoCreacion('SPREADSHEET')"
+              class="border border-slate-200 px-3 py-2.5 text-xs font-bold uppercase transition-all rounded-xl cursor-pointer"
+              [class.bg-emerald-500]="tipoCreacion() === 'SPREADSHEET'"
+              [class.text-white]="tipoCreacion() === 'SPREADSHEET'"
+              [class.bg-slate-50]="tipoCreacion() !== 'SPREADSHEET'"
+              [class.text-slate-600]="tipoCreacion() !== 'SPREADSHEET'"
+            >
+              Hoja Excel
+            </button>
+          </div>
+        </div>
+
+        <!-- Associated Trámite Select -->
+        <div class="space-y-1">
+          <label class="text-[8.5px] font-extrabold uppercase text-slate-450 tracking-wider">Vincular a Trámite</label>
+          <select 
+            formControlName="solicitudId" 
+            class="w-full border border-slate-200 px-3 py-2.5 text-xs font-bold text-slate-700 bg-slate-50 outline-none rounded-xl cursor-pointer"
+          >
+            <option value="" disabled selected>Selecciona una solicitud...</option>
+            @for (sol of solicitudes(); track sol.id) {
+              <option [value]="sol.id">{{ sol.codigoSeguimiento }} - {{ sol.titulo }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- Name -->
+        <div class="space-y-1">
+          <label class="text-[8.5px] font-extrabold uppercase text-slate-455 tracking-wider">Nombre del Archivo</label>
+          <input
+            type="text"
+            formControlName="nombre"
+            class="w-full border border-slate-200 px-3 py-2.5 text-xs font-semibold text-slate-800 bg-slate-50 outline-none rounded-xl placeholder:text-slate-400"
+            placeholder="Ej. Acta de Acuerdo Comercial"
+          />
+        </div>
+
+        <!-- Description -->
+        <div class="space-y-1">
+          <label class="text-[8.5px] font-extrabold uppercase text-slate-455 tracking-wider">Resumen de Contenido</label>
+          <textarea
+            formControlName="descripcion"
+            rows="2"
+            class="w-full border border-slate-200 px-3 py-2.5 text-xs font-semibold text-slate-800 bg-slate-50 outline-none rounded-xl placeholder:text-slate-400 resize-none"
+            placeholder="Resumen del documento..."
+          ></textarea>
+        </div>
+
+        <!-- Conditional form contents -->
+        @if (tipoCreacion() === 'FILE') {
+          <div class="space-y-1">
+            <label class="text-[8.5px] font-extrabold uppercase text-slate-455 tracking-wider">Seleccionar Archivo</label>
+            <input 
+              type="file" 
+              (change)="onFileSelected($event)" 
+              class="w-full border border-slate-200 bg-slate-50 p-2.5 text-xs rounded-xl cursor-pointer" 
+            />
+          </div>
+        } @else if (tipoCreacion() === 'COLLABORATIVE') {
+          <div class="space-y-1">
+            <label class="text-[8.5px] font-extrabold uppercase text-slate-455 tracking-wider">Redacción Borrador Inicial</label>
+            <textarea
+              formControlName="contenidoInicial"
+              rows="3"
+              class="w-full border border-slate-200 p-2.5 text-xs font-semibold text-slate-800 bg-slate-50 outline-none rounded-xl placeholder:text-slate-455 resize-none"
+              placeholder="Escriba los lineamientos o clausulas del documento..."
+            ></textarea>
+          </div>
+        } @else {
+          <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800">
+            Se creará una hoja editable con 15 filas y 8 columnas. Podrás agregar o eliminar filas y columnas dentro del editor.
+          </div>
+        }
+
+        <!-- Actions -->
+        <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100">
+          <button
+            type="button"
+            (click)="cerrarModalCrear()"
+            class="bg-white hover:bg-slate-50 border border-slate-200 px-4 py-2.5 text-xs font-bold uppercase text-slate-700 rounded-xl cursor-pointer transition"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="crearForm.invalid || (tipoCreacion() === 'FILE' && !selectedFile) || submitting()"
+            class="bg-emerald-500 hover:bg-emerald-400 text-white px-4 py-2.5 text-xs font-bold uppercase rounded-xl cursor-pointer disabled:opacity-50 shadow-sm transition"
+          >
+            {{ submitting() ? 'Registrando...' : 'Crear Documento' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- MODAL: CARGAR NUEVA VERSION FÍSICA -->
+@if (modalNuevaVersion()) {
+  <div class="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-fade-in">
+    <div class="bg-white p-6 shadow-xl max-w-sm w-full space-y-4 rounded-2xl border border-slate-200">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="text-xs font-black uppercase text-slate-900">Subir Nueva Versión</h3>
+        <button (click)="cerrarModalNuevaVersion()" class="text-slate-400 hover:text-slate-800 text-xl font-bold cursor-pointer leading-none">×</button>
+      </div>
+
+      <form [formGroup]="versionForm" (ngSubmit)="crearNuevaVersion()" class="space-y-4">
+        <div class="space-y-1">
+          <label class="text-[8.5px] font-extrabold uppercase text-slate-455 tracking-wider font-mono">Archivo Físico</label>
+          <input 
+            type="file" 
+            (change)="onFileSelected($event)" 
+            class="w-full border border-slate-200 bg-slate-50 p-2.5 text-xs rounded-xl cursor-pointer" 
+          />
+        </div>
+        <div class="space-y-1">
+          <label class="text-[8.5px] font-extrabold uppercase text-slate-455 tracking-wider">Motivo del Ajuste</label>
+          <input
+            type="text"
+            formControlName="comentario"
+            class="w-full border border-slate-200 px-3 py-2.5 text-xs font-semibold text-slate-800 bg-slate-50 outline-none rounded-xl placeholder:text-slate-400"
+            placeholder="Cláusulas modificadas o corrección..."
+          />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100">
+          <button
+            type="button"
+            (click)="cerrarModalNuevaVersion()"
+            class="bg-white border border-slate-200 text-slate-700 px-4 py-2.5 text-xs font-bold uppercase rounded-xl cursor-pointer transition hover:bg-slate-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="versionForm.invalid || !selectedFile || submitting()"
+            class="bg-emerald-500 hover:bg-emerald-400 text-white px-4 py-2.5 text-xs font-bold uppercase rounded-xl cursor-pointer disabled:opacity-50 shadow-sm transition"
+          >
+            {{ submitting() ? 'Subiendo...' : 'Actualizar Versión' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- MODAL: GUÍA DE NEGOCIO -->
+@if (mostrarGuiaNegocio()) {
+  <div class="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-fade-in">
+    <div class="bg-white p-6 shadow-xl max-w-lg w-full space-y-4 rounded-2xl border border-slate-200">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <span class="bg-indigo-50 border border-indigo-150 px-2 py-0.5 rounded-full text-[9px] font-extrabold text-indigo-700">GUÍA</span>
+          <h3 class="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-tight">Manual de Procesamiento DMS</h3>
+        </div>
+        <button (click)="mostrarGuiaNegocio.set(false)" class="text-slate-400 hover:text-slate-800 text-xl font-bold cursor-pointer leading-none">×</button>
+      </div>
+
+      <div class="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+        <!-- Item 1 -->
+        <div class="border border-slate-200/80 rounded-xl bg-slate-50/50 p-4 space-y-1.5">
+          <h4 class="text-[9.5px] font-black text-slate-850 uppercase tracking-wide">01 / Asignación y Visibilidad</h4>
+          <p class="text-[10px] text-slate-600 font-medium leading-relaxed uppercase">
+            Los expedientes y borradores se asocian de forma unívoca a folios de trámite. Esto permite auditar qué departamento o agente modificó los anexos documentales.
+          </p>
+        </div>
+
+        <!-- Item 2 -->
+        <div class="border border-slate-200/80 rounded-xl bg-slate-50/50 p-4 space-y-1.5">
+          <h4 class="text-[9.5px] font-black text-slate-850 uppercase tracking-wide">02 / Conciliación BPMN 2.0</h4>
+          <p class="text-[10px] text-slate-600 font-medium leading-relaxed uppercase">
+            Las transiciones de etapas en los diagramas de proceso requieren cargas y validaciones de expedientes. Al ser completadas, el sistema archiva una versión firmada en el DMS.
+          </p>
+        </div>
+
+        <!-- Item 3 -->
+        <div class="border border-slate-200/80 rounded-xl bg-slate-50/50 p-4 space-y-1.5">
+          <h4 class="text-[9.5px] font-black text-slate-850 uppercase tracking-wide">03 / Exclusividad y Bloqueos</h4>
+          <p class="text-[10px] text-slate-600 font-medium leading-relaxed uppercase">
+            Para evitar discrepancias en borradores online, el primer revisor que accede a la edición adquiere un token exclusivo de bloqueo. Los demás agentes podrán visualizar pero no alterar el borrador.
+          </p>
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-3 border-t border-slate-100">
+        <button
+          type="button"
+          (click)="mostrarGuiaNegocio.set(false)"
+          class="bg-slate-50 hover:bg-slate-100 border border-slate-200 px-4 py-2 text-[10px] font-black uppercase text-slate-700 rounded-xl cursor-pointer transition"
+        >
+          Cerrar Guía
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- FULLSCREEN VISOR -->
+@if (visorActivo()) {
+  <div class="fixed inset-0 z-[200] bg-slate-50 flex flex-col animate-fade-in">
+    <!-- Header -->
+    <header class="h-16 border-b border-slate-200 bg-white px-4 flex items-center justify-between shadow-sm shrink-0">
+      <div class="flex items-center gap-3">
+        <button
+          (click)="cerrarVisor()"
+          class="w-9 h-9 bg-slate-50 border border-slate-200 hover:bg-slate-100 flex items-center justify-center rounded-xl transition-all cursor-pointer"
+          data-tooltip="Cerrar el visor de archivos y volver al repositorio"
+        >
+          <mat-icon fontSet="material-symbols-rounded" class="!text-lg font-bold text-slate-600">arrow_back</mat-icon>
+        </button>
+        <div>
+          <h3 class="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-tight">{{ seleccionado()?.nombre }}</h3>
+          <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Visor Seguro · Versión Activa v{{ seleccionado()?.versionActual }}</p>
+        </div>
+      </div>
+
+      <a
+        [href]="archivoUrl(seleccionado()?.versiones?.[(seleccionado()?.versiones?.length || 1) - 1]?.nombreAlmacenado, true)"
+        target="_blank"
+        class="bg-emerald-500 hover:bg-emerald-400 text-white px-4 py-2.5 text-[10px] font-bold uppercase rounded-xl transition shadow-sm text-center"
+        data-tooltip="Descargar el archivo original a su dispositivo local"
+      >
+        Descargar Documento
+      </a>
+    </header>
+
+    <!-- Visor Panel -->
+    <main class="flex-1 p-5 overflow-y-auto flex justify-center bg-slate-100">
+      <div class="w-full max-w-5xl border border-slate-200/80 bg-white shadow-xl rounded-2xl overflow-hidden flex flex-col min-h-[75vh]">
+        @if (esPdf(seleccionado()?.versiones?.[(seleccionado()?.versiones?.length || 1) - 1]?.tipoContenido)) {
+          <iframe 
+            [src]="getPdfUrl(seleccionado()?.versiones?.[(seleccionado()?.versiones?.length || 1) - 1]?.nombreAlmacenado)" 
+            class="w-full flex-1 border-none min-h-[75vh]" 
+            frameborder="0"
+          ></iframe>
+        } @else {
+          <div class="flex-1 flex flex-col items-center justify-center p-8 gap-4 text-center">
+            <div class="h-14 w-14 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center text-slate-400">
+              <mat-icon fontSet="material-symbols-rounded" class="!text-3xl">insert_drive_file</mat-icon>
+            </div>
+            <div class="space-y-1.5">
+              <h4 class="text-xs font-black uppercase text-slate-800">Vista previa del archivo no disponible</h4>
+              <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Format: {{ seleccionado()?.versiones?.[(seleccionado()?.versiones?.length || 1) - 1]?.tipoContenido }}</p>
+            </div>
+            <a
+              [href]="archivoUrl(seleccionado()?.versiones?.[(seleccionado()?.versiones?.length || 1) - 1]?.nombreAlmacenado, true)"
+              target="_blank"
+              class="bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 px-5 py-2.5 text-xs font-bold uppercase rounded-xl transition"
+              data-tooltip="Abrir el archivo original directamente en el navegador"
+            >
+              Abrir en una Nueva Pestaña
+            </a>
+          </div>
+        }
+      </div>
+    </main>
+  </div>
+}
+
+<!-- MODAL: TRAZABILIDAD Y HISTORIAL DE VERSIONES -->
+@if (modalTrazabilidad()) {
+  @if (seleccionado(); as doc) {
+    <div class="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-fade-in">
+      <div class="bg-white p-6 shadow-xl max-w-2xl w-full space-y-4 rounded-2xl border border-slate-200">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div class="flex items-center gap-2.5">
+            <div class="h-7 w-7 bg-indigo-50 text-indigo-700 rounded-lg flex items-center justify-center border border-indigo-150">
+              <mat-icon fontSet="material-symbols-rounded" class="!text-sm font-bold">history</mat-icon>
+            </div>
+            <h3 class="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-tight">Historial de Auditoría</h3>
+          </div>
+          <button (click)="cerrarHistorialTrazabilidad()" class="text-slate-400 hover:text-slate-800 text-xl font-bold cursor-pointer leading-none">×</button>
+        </div>
+
+        <!-- Timeline container -->
+        <div class="space-y-4 max-h-[380px] overflow-y-auto pr-1.5">
+          <div class="relative pl-6 flex flex-col gap-6">
+            <!-- Timeline backbone divider -->
+            <div class="absolute left-3 top-2.5 bottom-2.5 w-0.5 bg-slate-200/80"></div>
+
+            @for (ver of doc.versiones.slice().reverse(); track ver.version) {
+              <div class="relative pl-6 flex items-start gap-4 group">
+                <!-- Timeline bullet -->
+                <div 
+                  class="absolute left-[-17px] top-1 w-6 h-6 rounded-full bg-white border-2 z-10 flex items-center justify-center shadow-sm"
+                  [class.border-teal-500]="ver.version === doc.versionActual"
+                  [class.bg-teal-50]="ver.version === doc.versionActual"
+                  [class.border-slate-300]="ver.version !== doc.versionActual"
+                  [class.bg-slate-50]="ver.version !== doc.versionActual"
+                >
+                  <mat-icon 
+                    fontSet="material-symbols-rounded" 
+                    class="!text-[10px]"
+                    [class.text-teal-600]="ver.version === doc.versionActual"
+                    [class.text-slate-500]="ver.version !== doc.versionActual"
+                  >
+                    {{ ver.version === doc.versionActual ? 'star' : 'done' }}
+                  </mat-icon>
+                </div>
+
+                <!-- Version card details -->
+                <div class="flex-1 bg-slate-50/50 border border-slate-200/70 p-4 rounded-xl space-y-2 animate-fade-in">
+                  <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-1.5">
+                    <span class="text-xs font-black text-slate-900 uppercase">
+                      Versión {{ ver.version }} @if (ver.version === doc.versionActual) { (Actual) }
+                    </span>
+                    <span class="text-[9px] font-bold text-slate-400">{{ ver.fechaSubida | date:'dd/MM/yyyy' }}</span>
+                  </div>
+                  <div class="flex items-center gap-1 text-[8.5px] font-bold text-slate-400 uppercase">
+                    <span>Responsable:</span>
+                    <span class="text-slate-700 font-extrabold">{{ ver.subidoPor }}</span>
+                  </div>
+                  
+                  @if (ver.comentarioCambio) {
+                    <p class="border-l-2 border-teal-500 bg-white p-2.5 text-xs text-slate-600 italic rounded-r-lg shadow-sm">
+                      "{{ ver.comentarioCambio }}"
+                    </p>
+                  }
+
+                  @if (doc.tipo === 'FILE' && ver.nombreAlmacenado) {
+                    <div class="pt-1 flex">
+                      <a
+                        [href]="archivoUrl(ver.nombreAlmacenado, true)"
+                        target="_blank"
+                        class="inline-flex items-center gap-1 bg-white border border-slate-200 hover:bg-slate-50 px-3 py-1.5 text-[9px] font-bold uppercase text-slate-700 rounded-lg shadow-sm cursor-pointer transition"
+                        data-tooltip="Descargar esta versión física del archivo"
+                      >
+                        <mat-icon fontSet="material-symbols-rounded" class="!text-xs">download</mat-icon>
+                        <span>Descargar Versión</span>
+                      </a>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="flex justify-end pt-3 border-t border-slate-100">
+          <button
+            type="button"
+            (click)="cerrarHistorialTrazabilidad()"
+            class="bg-slate-50 hover:bg-slate-100 border border-slate-200 px-4 py-2.5 text-xs font-bold uppercase text-slate-700 rounded-xl cursor-pointer transition"
+          >
+            Cerrar Historial
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+}
+
+<!-- MODAL: CONTENIDO Y DETALLE COMPLETO -->
+@if (modalContenido() && seleccionado(); as doc) {
+  <div class="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-fade-in">
+    <div class="bg-white p-6 shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto space-y-5 rounded-2xl border border-slate-200 flex flex-col animate-fade-in">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <div class="h-8 w-8 bg-indigo-50 text-indigo-700 rounded-lg flex items-center justify-center border border-indigo-150">
+            <mat-icon fontSet="material-symbols-rounded" class="!text-base font-bold">article</mat-icon>
+          </div>
+          <div>
+            <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">{{ doc.nombre }}</h3>
+            <p class="text-[10px] font-bold text-slate-450 uppercase tracking-wider">Detalles de Contenido y Borrador</p>
+          </div>
+        </div>
+        <button (click)="modalContenido.set(false)" class="text-slate-450 hover:text-slate-800 text-xl font-bold cursor-pointer leading-none">×</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="space-y-4 overflow-y-auto flex-1 max-h-[60vh] pr-1">
+        
+        <!-- Description / Explicativo Block -->
+        <div class="space-y-1">
+          <span class="text-xs font-bold text-slate-455 uppercase tracking-wider block">Comentario Explicativo</span>
+          <div class="bg-slate-50/50 border border-slate-200/50 rounded-xl p-4 text-xs font-semibold text-slate-600 leading-relaxed italic">
+            "{{ doc.descripcion || 'Sin comentarios adicionales registrados.' }}"
+          </div>
+        </div>
+
+        <!-- Collaborative Draft Content (Parchment Styled Card) -->
+        @if (doc.tipo === 'COLLABORATIVE') {
+          <div class="space-y-1.5 pt-2">
+            <span class="text-xs font-bold text-indigo-900 uppercase tracking-wider block">Borrador de Documento</span>
+            <div class="bg-[#fcfbf9] border border-amber-200/80 rounded-xl p-5 shadow-inner max-h-[350px] overflow-y-auto relative">
+              <!-- Page Margin Line -->
+              <div class="absolute left-6 top-0 bottom-0 w-0.5 bg-red-100/50"></div>
+              
+              <div class="pl-4 font-serif text-xs text-slate-800 leading-relaxed whitespace-pre-wrap select-text">
+                {{ doc.contenidoColaborativo || 'El borrador está vacío. Comience a editar para agregar contenido.' }}
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="pt-4 border-t border-slate-100 flex justify-end gap-2 shrink-0">
+        <button
+          (click)="modalContenido.set(false)"
+          class="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-xl transition cursor-pointer"
+        >
+          Cerrar Vista
+        </button>
+        @if (doc.tipo === 'COLLABORATIVE') {
+          <button
+            (click)="modalContenido.set(false); editarOnline(doc)"
+            class="px-4 py-2 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl shadow-sm hover:shadow transition-all cursor-pointer flex items-center gap-1.5"
+            data-tooltip="Abrir el editor ProseMirror para modificar el borrador"
+          >
+            <mat-icon fontSet="material-symbols-rounded" class="!text-xs font-bold">edit</mat-icon>
+            <span>Editar Borrador</span>
+          </button>
+        }
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- MODAL: ASOCIAR DOCUMENTO A SOLICITUD -->
+@if (modalAsociar()) {
+  @if (seleccionado(); as doc) {
+    <div class="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-fade-in">
+      <div class="bg-white p-6 shadow-xl max-w-sm w-full space-y-4 rounded-2xl border border-slate-200">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <mat-icon fontSet="material-symbols-rounded" class="text-emerald-500 !text-lg">sync_alt</mat-icon>
+            <h3 class="text-xs font-black uppercase text-slate-900">Vincular a Trámite</h3>
+          </div>
+          <button (click)="modalAsociar.set(false)" class="text-slate-400 hover:text-slate-800 text-xl font-bold cursor-pointer leading-none">×</button>
+        </div>
+
+        <div class="space-y-3">
+          <p class="text-[11px] text-slate-550 leading-normal">
+            Asocia el documento <b>"{{ doc.nombre }}"</b> a un expediente o trámite activo para consolidar su auditoría y asociarlo a su respectivo workflow.
+          </p>
+
+          <div class="space-y-1">
+            <label class="text-[8.5px] font-extrabold uppercase text-slate-455 tracking-wider">Seleccionar Trámite Destino</label>
+            <select 
+              [(ngModel)]="solicitudDestinoId"
+              class="w-full border border-slate-200 px-3 py-2.5 text-xs font-bold text-slate-700 bg-slate-50 outline-none rounded-xl cursor-pointer"
+            >
+              <option value="" disabled selected>Seleccione un trámite...</option>
+              @for (sol of solicitudes(); track sol.id) {
+                <option [value]="sol.id">{{ sol.codigoSeguimiento }} - {{ sol.titulo }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100">
+          <button
+            type="button"
+            (click)="modalAsociar.set(false)"
+            class="bg-white border border-slate-200 text-slate-700 px-4 py-2.5 text-xs font-bold uppercase rounded-xl cursor-pointer transition hover:bg-slate-50"
+          >
+            Cancelar
+          </button>
+          <button
+            (click)="confirmarAsociacion()"
+            [disabled]="!solicitudDestinoId() || submitting()"
+            class="bg-emerald-500 hover:bg-emerald-400 text-white px-4 py-2.5 text-xs font-bold uppercase rounded-xl cursor-pointer disabled:opacity-50 shadow-sm transition"
+          >
+            {{ submitting() ? 'Guardando...' : 'Vincular' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+}

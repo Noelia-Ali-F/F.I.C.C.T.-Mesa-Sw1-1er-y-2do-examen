@@ -1,0 +1,427 @@
+<div class="archivos-container animate-fade-in pb-16 space-y-6 max-w-7xl mx-auto px-4 sm:px-6">
+
+  <!-- Unified Page Header -->
+  <app-page-header
+    title="Todos los Archivos"
+    subtitle="Visor consolidado de archivos y adjuntos en solicitudes y DMS"
+    eyebrow="REPOSITORIO DE ALMACENAMIENTO"
+    icon="cloud"
+    gradientClasses="from-blue-600 via-sky-500 to-indigo-650"
+  >
+    <!-- Header Actions -->
+    <button
+      (click)="cargarArchivos()"
+      class="flex items-center gap-1.5 px-4.5 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 bg-white border border-slate-200/80 rounded-xl shadow-sm hover:shadow transition-all duration-200 cursor-pointer"
+      data-tooltip="Actualizar lista de archivos desde la base de datos"
+    >
+      <mat-icon fontSet="material-symbols-rounded" class="!text-sm font-bold text-slate-500">refresh</mat-icon>
+      <span>Sincronizar</span>
+    </button>
+  </app-page-header>
+
+  <!-- KPI Telemetry Bar -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <!-- Stat Card: Total -->
+    <div class="telemetry-card" data-tooltip="Total de archivos subidos en el sistema">
+      <div class="space-y-1">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Total Archivos</span>
+        <p class="text-2xl sm:text-3xl font-black text-slate-900 leading-none">{{ totalCount() }}</p>
+      </div>
+      <div class="telemetry-icon-box">
+        <mat-icon fontSet="material-symbols-rounded" class="!text-base font-bold">cloud_done</mat-icon>
+      </div>
+    </div>
+    
+    <!-- Stat Card: Imágenes -->
+    <div class="telemetry-card" data-tooltip="Fotos e imágenes subidas (PNG, JPG, JPEG...)">
+      <div class="space-y-1">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Fotos / Imágenes</span>
+        <p class="text-2xl sm:text-3xl font-black text-sky-500 leading-none">{{ imagesCount() }}</p>
+      </div>
+      <div class="telemetry-icon-box sky">
+        <mat-icon fontSet="material-symbols-rounded" class="!text-base font-bold">image</mat-icon>
+      </div>
+    </div>
+
+    <!-- Stat Card: Documentos -->
+    <div class="telemetry-card" data-tooltip="Documentos de texto, PDFs, hojas de cálculo...">
+      <div class="space-y-1">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Documentos & PDFs</span>
+        <p class="text-2xl sm:text-3xl font-black text-indigo-600 leading-none">{{ pdfCount() }}</p>
+      </div>
+      <div class="telemetry-icon-box indigo">
+        <mat-icon fontSet="material-symbols-rounded" class="!text-base font-bold">picture_as_pdf</mat-icon>
+      </div>
+    </div>
+
+    <!-- Stat Card: Otros -->
+    <div class="telemetry-card" data-tooltip="Archivos comprimidos, archivos planos y otros formatos">
+      <div class="space-y-1">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Otros Formatos</span>
+        <p class="text-2xl sm:text-3xl font-black text-slate-500 leading-none">{{ otrosCount() }}</p>
+      </div>
+      <div class="telemetry-icon-box slate">
+        <mat-icon fontSet="material-symbols-rounded" class="!text-base font-bold">insert_drive_file</mat-icon>
+      </div>
+    </div>
+  </div>
+
+  <!-- Segmented Tabs for Catalog Categories -->
+  <div class="tab-pill-bar">
+    <button
+      (click)="filtroTipo = 'TODOS'"
+      [class.is-active]="filtroTipo === 'TODOS'"
+      class="tab-pill-btn"
+      data-tooltip="Mostrar todos los archivos"
+    >
+      <mat-icon fontSet="material-symbols-rounded" class="!text-sm">folder_open</mat-icon>
+      <span>Todos los Archivos</span>
+      <span class="ml-1.5 px-2 py-0.5 text-[10px] font-black rounded-full bg-slate-100 text-slate-600 border border-slate-200/55">
+        {{ totalCount() }}
+      </span>
+    </button>
+
+    <button
+      (click)="filtroTipo = 'DOCUMENTOS'"
+      [class.is-active]="filtroTipo === 'DOCUMENTOS'"
+      class="tab-pill-btn"
+      data-tooltip="Filtrar por PDFs y archivos de oficina"
+    >
+      <mat-icon fontSet="material-symbols-rounded" class="!text-sm">picture_as_pdf</mat-icon>
+      <span>Documentos & PDFs</span>
+      <span class="ml-1.5 px-2 py-0.5 text-[10px] font-black rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
+        {{ pdfCount() }}
+      </span>
+    </button>
+
+    <button
+      (click)="filtroTipo = 'IMAGENES'"
+      [class.is-active]="filtroTipo === 'IMAGENES'"
+      class="tab-pill-btn"
+      data-tooltip="Filtrar por fotos e imágenes"
+    >
+      <mat-icon fontSet="material-symbols-rounded" class="!text-sm">image</mat-icon>
+      <span>Fotos & Imágenes</span>
+      <span class="ml-1.5 px-2 py-0.5 text-[10px] font-black rounded-full bg-sky-50 text-sky-700 border border-sky-100">
+        {{ imagesCount() }}
+      </span>
+    </button>
+
+    <button
+      (click)="filtroTipo = 'OTROS'"
+      [class.is-active]="filtroTipo === 'OTROS'"
+      class="tab-pill-btn"
+      data-tooltip="Filtrar por otros tipos de archivos"
+    >
+      <mat-icon fontSet="material-symbols-rounded" class="!text-sm">insert_drive_file</mat-icon>
+      <span>Otros</span>
+      <span class="ml-1.5 px-2 py-0.5 text-[10px] font-black rounded-full bg-slate-50 text-slate-700 border border-slate-200/55">
+        {{ otrosCount() }}
+      </span>
+    </button>
+  </div>
+
+  <!-- Search & Catalog Filtering Bar -->
+  <section class="bg-white border border-slate-200/80 p-4 rounded-2xl shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+    <!-- Search Field -->
+    <div class="relative flex-1 min-w-[280px]">
+      <mat-icon fontSet="material-symbols-rounded" class="absolute left-3.5 top-1/2 -translate-y-1/2 !text-slate-400 !text-lg">search</mat-icon>
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        placeholder="Buscar por nombre, autor, origen..."
+        class="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 border border-slate-250/80 text-sm font-semibold text-slate-800 outline-none rounded-xl placeholder:text-slate-450 focus:border-blue-500/60 focus:bg-white transition"
+      />
+    </div>
+
+    <!-- Filters Toggle Deck -->
+    <div class="flex flex-wrap items-center gap-4 shrink-0">
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Ordenación</span>
+        <select 
+          [(ngModel)]="filtroOrden" 
+          class="bg-white border border-slate-250/80 px-3 py-2 text-xs font-bold text-slate-700 rounded-xl outline-none shadow-sm cursor-pointer hover:bg-slate-50/50 transition-colors"
+        >
+          <option value="RECIENTE">Más recientes</option>
+          <option value="TAMANO">Tamaño (Mayor a Menor)</option>
+          <option value="ALFABETICO">Alfabético (A-Z)</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <!-- Split Catalog Canvas Grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    
+    <!-- LEFT PANEL: Files List (7 cols) -->
+    <div class="lg:col-span-7 space-y-3">
+      @if (cargando()) {
+        <div class="bg-white border border-slate-200/80 p-12 text-center rounded-2xl shadow-sm flex flex-col items-center justify-center gap-3">
+          <div class="h-8 w-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <p class="text-xs font-black text-slate-500 uppercase tracking-widest animate-pulse">Sincronizando archivos del bucket...</p>
+        </div>
+      } @else if (archivosFiltrados().length === 0) {
+        <div class="bg-white border border-dashed border-slate-250/80 p-12 text-center rounded-2xl shadow-sm flex flex-col items-center justify-center gap-4">
+          <div class="h-12 w-12 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 border border-slate-100">
+            <mat-icon fontSet="material-symbols-rounded" class="!text-2xl">cloud_off</mat-icon>
+          </div>
+          <div class="space-y-1">
+            <h3 class="text-xs font-black uppercase text-slate-800">No se encontraron archivos</h3>
+            <p class="text-xs text-slate-450 font-bold uppercase tracking-wider max-w-sm mx-auto leading-normal">
+              No hay archivos subidos que coincidan con la búsqueda o filtro seleccionado.
+            </p>
+          </div>
+        </div>
+      } @else {
+        <div class="space-y-3">
+          @for (file of archivosFiltrados(); track file.id) {
+            <div
+              (click)="seleccionarArchivo(file)"
+              class="file-item-card"
+              [class.is-selected]="seleccionado()?.id === file.id"
+            >
+              <!-- Extension Type Badge -->
+              <div 
+                class="shrink-0 w-11 h-11 border rounded-xl flex flex-col items-center justify-center font-black text-[10px] uppercase tracking-wider shadow-inner"
+                [class.bg-sky-50]="isImage(file)" [class.border-sky-150]="isImage(file)" [class.text-sky-700]="isImage(file)"
+                [class.bg-rose-50]="isPdf(file)" [class.border-rose-150]="isPdf(file)" [class.text-rose-700]="isPdf(file)"
+                [class.bg-indigo-50]="!isImage(file) && !isPdf(file)" [class.border-indigo-150]="!isImage(file) && !isPdf(file)" [class.text-indigo-700]="!isImage(file) && !isPdf(file)"
+              >
+                <mat-icon fontSet="material-symbols-rounded" class="!text-sm mb-0.5">{{ getFileTypeIcon(file.tipoContenido) }}</mat-icon>
+                <span class="text-[8px] leading-none">{{ getFileTypeLabel(file.tipoContenido, file.nombreOriginal) }}</span>
+              </div>
+
+              <!-- Metadata Details -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                  <h4 class="text-xs font-bold text-slate-800 truncate" [title]="file.nombreOriginal">
+                    {{ file.nombreOriginal }}
+                  </h4>
+                  @if (file.nombreAlmacenado.startsWith('gcs:')) {
+                    <span class="wf-badge wf-badge-primary flex items-center gap-0.5">
+                      <mat-icon fontSet="material-symbols-rounded" class="!text-[9px] leading-none">cloud</mat-icon>
+                      <span>GCS Bucket</span>
+                    </span>
+                  } @else {
+                    <span class="wf-badge wf-badge-slate flex items-center gap-0.5">
+                      <mat-icon fontSet="material-symbols-rounded" class="!text-[9px] leading-none">dns</mat-icon>
+                      <span>Local</span>
+                    </span>
+                  }
+                </div>
+                
+                <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                  <span class="text-slate-500 font-bold">{{ getFileSizeFormatted(file.tamanoBytes) }}</span>
+                  <span class="text-slate-300">•</span>
+                  <span>Por {{ file.subidoPor }}</span>
+                  <span class="text-slate-300">•</span>
+                  <span>{{ file.fechaSubida | date:'dd/MM/yyyy HH:mm' }}</span>
+                </div>
+
+                <!-- Provenance Origin Indicator -->
+                <div class="mt-1.5 flex items-center gap-1">
+                  <span class="px-2 py-0.5 text-[9px] font-black rounded bg-slate-50 border border-slate-200/60 text-slate-500 flex items-center gap-1">
+                    <mat-icon fontSet="material-symbols-rounded" class="!text-[10px]">{{ file.origenTipo === 'SOLICITUD' ? 'assignment' : 'description' }}</mat-icon>
+                    {{ file.origenTipo }}
+                  </span>
+                  <span class="text-[10px] font-bold text-slate-600 truncate max-w-[200px]" [title]="file.origenNombre">
+                    {{ file.origenNombre }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Inline Action buttons -->
+              <div class="shrink-0 flex items-center gap-1.5" (click)="$event.stopPropagation()">
+                <!-- Link to Request if applicable -->
+                @if (file.solicitudId) {
+                  <button
+                    (click)="irAlOrigen(file, $event)"
+                    class="action-btn"
+                    data-tooltip="Ver solicitud o expediente de origen"
+                  >
+                    <mat-icon fontSet="material-symbols-rounded" class="!text-sm">open_in_new</mat-icon>
+                  </button>
+                }
+                <!-- Download direct button -->
+                <button
+                  (click)="descargarArchivo(file, $event)"
+                  class="action-btn primary"
+                  data-tooltip="Descargar archivo adjunto"
+                >
+                  <mat-icon fontSet="material-symbols-rounded" class="!text-sm">download</mat-icon>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- RIGHT PANEL: File Preview & Detailed Audit (5 cols) -->
+    <div class="lg:col-span-5">
+      @if (seleccionado()) {
+        @let activeFile = seleccionado()!;
+        <div class="inspector-card sticky top-6">
+          <!-- Card Header / Title -->
+          <div class="inspector-header">
+            <div class="flex items-center gap-2">
+              <mat-icon fontSet="material-symbols-rounded" class="text-slate-400">info</mat-icon>
+              <h3 class="text-xs font-black uppercase text-slate-800" style="margin: 0;">Detalles del Archivo</h3>
+            </div>
+            <div class="flex items-center gap-1.5">
+              @if (activeFile.solicitudId) {
+                <button
+                  (click)="irAlOrigen(activeFile)"
+                  class="inspector-btn-secondary"
+                >
+                  <mat-icon fontSet="material-symbols-rounded" class="!text-xs">open_in_new</mat-icon>
+                  <span>Origen</span>
+                </button>
+              }
+              <button
+                (click)="descargarArchivo(activeFile)"
+                class="inspector-btn-primary"
+              >
+                <mat-icon fontSet="material-symbols-rounded" class="!text-xs">download</mat-icon>
+                <span>Descargar</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Preview Area -->
+          <div class="inspector-preview-box">
+            @if (isImage(activeFile)) {
+              <img
+                [src]="getDownloadUrl(activeFile)"
+                [alt]="activeFile.nombreOriginal"
+                class="max-w-full max-h-[200px] object-contain rounded-lg shadow-sm bg-white p-1"
+              />
+            } @else if (isPdf(activeFile)) {
+              <div class="flex flex-col items-center justify-center text-slate-400 gap-2">
+                <div class="h-16 w-16 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 shadow-sm">
+                  <mat-icon fontSet="material-symbols-rounded" class="!text-3xl">picture_as_pdf</mat-icon>
+                </div>
+                <span class="text-xs font-bold text-slate-600">Documento PDF</span>
+                <span class="text-[10px] text-slate-400 font-semibold uppercase">{{ getFileSizeFormatted(activeFile.tamanoBytes) }}</span>
+                <button
+                  (click)="descargarArchivo(activeFile)"
+                  class="mt-2 px-3 py-1.5 text-[10px] font-bold text-rose-600 bg-white border border-rose-200 rounded-lg hover:bg-rose-50 transition cursor-pointer"
+                >
+                  Abrir PDF en pestaña
+                </button>
+              </div>
+            } @else {
+              <div class="flex flex-col items-center justify-center text-slate-400 gap-2">
+                <div class="h-16 w-16 rounded-2xl bg-indigo-50 border border-indigo-150 flex items-center justify-center text-indigo-500 shadow-sm">
+                  <mat-icon fontSet="material-symbols-rounded" class="!text-3xl">{{ getFileTypeIcon(activeFile.tipoContenido) }}</mat-icon>
+                </div>
+                <span class="text-xs font-bold text-slate-600">{{ getFileTypeLabel(activeFile.tipoContenido, activeFile.nombreOriginal) }} Archivo</span>
+                <span class="text-[10px] text-slate-400 font-semibold uppercase">{{ getFileSizeFormatted(activeFile.tamanoBytes) }}</span>
+              </div>
+            }
+          </div>
+
+          <!-- Metadata Field List -->
+          <div class="inspector-body">
+            <!-- Metadata: Filename -->
+            <div class="inspector-field">
+              <span class="inspector-label">Nombre Original</span>
+              <p class="inspector-value">{{ activeFile.nombreOriginal }}</p>
+            </div>
+
+            <!-- Metadata: Storage Details -->
+            <div class="grid grid-cols-2 gap-4">
+              <div class="inspector-field">
+                <span class="inspector-label">Tamaño</span>
+                <p class="inspector-value" style="font-weight: 800;">{{ getFileSizeFormatted(activeFile.tamanoBytes) }}</p>
+              </div>
+              <div class="inspector-field">
+                <span class="inspector-label">Tipo MIME</span>
+                <p class="inspector-value truncate" [title]="activeFile.tipoContenido || 'Desconocido'">
+                  {{ activeFile.tipoContenido || 'Desconocido' }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="h-px bg-slate-100"></div>
+
+            <!-- Metadata: Upload Log -->
+            <div class="grid grid-cols-2 gap-4">
+              <div class="inspector-field">
+                <span class="inspector-label">Subido Por</span>
+                <div class="flex items-center gap-1.5 mt-0.5">
+                  <div class="h-5 w-5 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-[9px] font-bold text-slate-600">
+                    {{ activeFile.subidoPor.substring(0,2).toUpperCase() }}
+                  </div>
+                  <span class="text-xs font-bold text-slate-700 truncate">{{ activeFile.subidoPor }}</span>
+                </div>
+              </div>
+              <div class="inspector-field">
+                <span class="inspector-label">Fecha de Carga</span>
+                <p class="inspector-value">{{ activeFile.fechaSubida | date:'dd/MM/yyyy HH:mm:ss' }}</p>
+              </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="h-px bg-slate-100"></div>
+
+            <!-- Metadata: Provenance context -->
+            <div class="inspector-field">
+              <span class="inspector-label">Origen y Contexto</span>
+              
+              <div class="inspector-audit-card">
+                <div class="flex items-center gap-1.5">
+                  <span class="px-1.5 py-0.5 text-[8px] font-black rounded bg-slate-200/80 text-slate-600 uppercase tracking-widest">
+                    {{ activeFile.origenTipo }}
+                  </span>
+                  @if (activeFile.solicitudId) {
+                    <span class="text-[9px] font-black text-blue-600 uppercase tracking-wider">Asociado</span>
+                  }
+                </div>
+                <p class="text-xs font-bold text-slate-700 leading-snug" style="margin: 0;">{{ activeFile.origenNombre }}</p>
+                
+                @if (activeFile.solicitudId) {
+                  <p class="text-[10px] text-slate-400 font-semibold leading-normal mt-1" style="margin: 0; margin-top: 0.25rem;">
+                    Este archivo fue cargado como parte de las operaciones de la solicitud. Puede inspeccionar todo el expediente y la bitácora haciendo clic en "Origen".
+                  </p>
+                } @else if (activeFile.documentoId) {
+                  <p class="text-[10px] text-slate-400 font-semibold leading-normal mt-1" style="margin: 0; margin-top: 0.25rem;">
+                    Este archivo es una versión administrada dentro del Gestor Documental (DMS).
+                  </p>
+                }
+              </div>
+            </div>
+
+            <!-- Storage bucket URI representation -->
+            <div class="inspector-field" style="gap: 0.5rem;">
+              <span class="inspector-label" style="display: flex; align-items: center; gap: 0.25rem;">
+                <mat-icon fontSet="material-symbols-rounded" class="!text-xs" style="color: var(--theme-primary-color)">cloud_queue</mat-icon>
+                <span>Ubicación en el Bucket</span>
+              </span>
+              <p class="inspector-mono-badge">
+                {{ activeFile.nombreAlmacenado }}
+              </p>
+            </div>
+
+          </div>
+        </div>
+      } @else {
+        <!-- Empty Selection Slate -->
+        <div class="inspector-empty-card">
+          <div class="inspector-empty-icon-box">
+            <mat-icon fontSet="material-symbols-rounded" class="!text-3xl">info_outline</mat-icon>
+          </div>
+          <div class="space-y-1">
+            <h3 class="inspector-empty-title">Seleccione un archivo</h3>
+            <p class="inspector-empty-text">
+              Haga clic sobre cualquier archivo de la lista para auditar sus metadatos, procedencia y previsualización.
+            </p>
+          </div>
+        </div>
+      }
+    </div>
+
+  </div>
+
+</div>

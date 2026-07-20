@@ -1,0 +1,532 @@
+<div class="command-center-container">
+  
+  <!-- Role Intelligence Context Header Bar -->
+  <div class="role-intelligence-bar op-card-glass">
+    <div class="role-selector-header">
+      <mat-icon class="role-icon">fingerprint</mat-icon>
+      <div>
+        <h3 class="role-title">
+          Simulador de permisos por rol
+        </h3>
+        <span class="role-subtitle">
+          Selecciona un rol para ver cómo cambian los accesos dentro del sistema.
+        </span>
+      </div>
+    </div>
+    
+    <div class="role-buttons">
+      @for (role of ['Analyst', 'Supervisor', 'Compliance', 'Director', 'Auditor']; track role) {
+        <button 
+          (click)="switchRole(role)" 
+          class="role-btn" 
+          [class.active]="currentRole() === role">
+          {{ role }}
+        </button>
+      }
+    </div>
+
+    <div class="role-capabilities" [ngSwitch]="currentRole()">
+      <div *ngSwitchCase="'Analyst'" class="cap-item">
+        <mat-icon>edit</mat-icon> <span><strong>Modo Analista:</strong> Puedes editar borradores, cargar documentación operativa y rellenar checklists.</span>
+      </div>
+      <div *ngSwitchCase="'Supervisor'" class="cap-item">
+        <mat-icon>gavel</mat-icon> <span><strong>Modo Supervisor:</strong> Autoridad de aprobación, edición de solicitudes y asignación de prioridades.</span>
+      </div>
+      <div *ngSwitchCase="'Compliance'" class="cap-item">
+        <mat-icon>security</mat-icon> <span><strong>Modo Cumplimiento:</strong> Verificación del cumplimiento de políticas y trazabilidad de acciones operativas.</span>
+      </div>
+      <div *ngSwitchCase="'Director'" class="cap-item">
+        <mat-icon>visibility</mat-icon> <span><strong>Modo Director:</strong> Vista ejecutiva global del estado y carga de todos los departamentos.</span>
+      </div>
+      <div *ngSwitchCase="'Auditor'" class="cap-item">
+        <mat-icon>history_toggle_off</mat-icon> <span><strong>Modo Auditoría:</strong> Vista de lectura histórica sobre la línea de tiempo de cambios. Modificaciones deshabilitadas.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel de escenarios -->
+  <div class="simulator-deck op-card-glass">
+    <div class="simulator-header">
+      <div class="title-with-badge">
+        <mat-icon class="scenario-icon">play_circle_filled</mat-icon>
+        <h3 class="scenario-title">Explorador de casos de uso</h3>
+      </div>
+      @if (isSimulating()) {
+        <div class="simulation-badge">Simulación Activa</div>
+      }
+    </div>
+
+    <p class="scenario-description">
+      Explora casos de uso paso a paso para comprender la colaboración entre departamentos y cómo fluyen las solicitudes a través del sistema.
+    </p>
+
+    <!-- Selection deck -->
+    @if (!isSimulating()) {
+      <div class="scenario-selector-grid">
+        <div class="scenario-card-select" (click)="startScenario('RRHH')">
+          <div class="sc-header">
+            <mat-icon style="color: #3b82f6;">groups</mat-icon>
+            <h4>Contratación RRHH (Onboarding)</h4>
+          </div>
+          <p>Mapea el reclutamiento, subida de propuesta, alertas de SLA Legal por anexo financiero y firma digital supervisora.</p>
+        </div>
+
+        <div class="scenario-card-select" (click)="startScenario('FINANZAS')">
+          <div class="sc-header">
+            <mat-icon style="color: #f59e0b;">shopping_cart</mat-icon>
+            <h4>Adquisición de Hardware Crítico</h4>
+          </div>
+          <p>Muestra solicitudes de red, bloqueo operativo de finanzas, violación de presupuesto y anulación manual del Director.</p>
+        </div>
+
+        <div class="scenario-card-select" (click)="startScenario('COMPLIANCE')">
+          <div class="sc-header">
+            <mat-icon style="color: #10b981;">policy</mat-icon>
+            <h4>Auditoría de Subredes & Seguridad</h4>
+          </div>
+          <p>Inspección de firewall, bloqueo automático de IP pública insegura por política y corrección con firma criptográfica.</p>
+        </div>
+      </div>
+    } @else {
+      <!-- Active step simulator -->
+      <div class="active-simulator-ui">
+        <div class="sim-meta">
+          <span class="sim-name">{{ currentScenarioName() }}</span>
+          <span class="sim-step-counter">Paso {{ currentScenarioStepIndex() + 1 }} de {{ activeScenarioSteps().length }}</span>
+        </div>
+
+        <div class="sim-progress-bar">
+          <div class="progress-fill" [style.width.%]="((currentScenarioStepIndex() + 1) / activeScenarioSteps().length) * 100"></div>
+        </div>
+
+        <div class="sim-step-detail">
+          <div class="sim-step-badge">Paso Activo: {{ activeScenarioSteps()[currentScenarioStepIndex()].label }}</div>
+          <div class="sim-step-actor">Actor: <strong>{{ activeScenarioSteps()[currentScenarioStepIndex()].actor }}</strong></div>
+          <p class="sim-step-msg">"{{ activeScenarioSteps()[currentScenarioStepIndex()].message }}"</p>
+        </div>
+
+        <div class="sim-controls">
+          <button (click)="resetSimulation()" class="wf-btn-secondary">Reiniciar Entorno</button>
+          <button (click)="advanceScenario()" class="wf-btn-primary">
+            {{ currentScenarioStepIndex() === activeScenarioSteps().length - 1 ? 'Concluir y Cerrar' : 'Avanzar Siguiente Paso' }}
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Cabecera de métricas operativas -->
+  <div class="twin-header-grid">
+    <div class="twin-card op-card-glass">
+      <div class="twin-icon compliance">
+        <mat-icon>security</mat-icon>
+      </div>
+      <div class="twin-data">
+        <span class="twin-label">Cumplimiento SLA</span>
+        <span class="twin-value">{{ departmentHealth().slaCompliance }}%</span>
+      </div>
+      <div class="twin-badge" [class.positive]="departmentHealth().slaCompliance >= 90" [class.risk]="departmentHealth().slaCompliance < 90">
+        {{ departmentHealth().slaCompliance >= 90 ? 'ÓPTIMO' : 'EN RIESGO' }}
+      </div>
+    </div>
+
+    <div class="twin-card op-card-glass">
+      <div class="twin-icon workload">
+        <mat-icon>leaderboard</mat-icon>
+      </div>
+      <div class="twin-data">
+        <span class="twin-label">Carga Operativa</span>
+        <span class="twin-value">{{ departmentHealth().workloadDensity }}%</span>
+      </div>
+      <div class="twin-badge risk">MÁXIMA</div>
+    </div>
+
+    <div class="twin-card op-card-glass">
+      <div class="twin-icon flows">
+        <mat-icon>account_tree</mat-icon>
+      </div>
+      <div class="twin-data">
+        <span class="twin-label">Procesos Activos</span>
+        <span class="twin-value">{{ departmentHealth().activeProcesses }}</span>
+      </div>
+      <div class="twin-badge normal">ACTIVOS</div>
+    </div>
+
+    <div class="twin-card attention-target op-card-glass" [class.urgent]="attention.activeUrgentAlertsCount() > 0">
+      <div class="twin-icon risk-level">
+        <mat-icon>warning</mat-icon>
+      </div>
+      <div class="twin-data">
+        <span class="twin-label">Riesgos Operativos</span>
+        <span class="twin-value">{{ attention.activeUrgentAlertsCount() }}</span>
+      </div>
+      <div class="twin-badge" [class.danger]="attention.activeUrgentAlertsCount() > 0">ACCIONES REQUERIDAS</div>
+    </div>
+  </div>
+
+  <!-- Interactive Operational Dependency Graph Panel -->
+  <div class="operational-panel graph-panel op-card-glass">
+    <div class="panel-header">
+      <div class="title-with-badge">
+        <mat-icon class="graph-icon">bubble_chart</mat-icon>
+        <h3>Dependencias operativas</h3>
+      </div>
+      <div class="graph-legend">
+        <span class="legend-item"><span class="legend-dot critical"></span> SLA Crítico</span>
+        <span class="legend-item"><span class="legend-dot blocked"></span> Bloqueado</span>
+        <span class="legend-item"><span class="legend-dot published"></span> Publicado</span>
+      </div>
+    </div>
+
+    <div class="graph-content-layout">
+      <!-- SVG Drawing area -->
+      <div class="svg-container">
+        <svg
+          class="dependency-graph"
+          width="100%"
+          height="320"
+          (pointermove)="onGraphPointerMove($event)"
+          (pointerup)="onGraphPointerUp($event)"
+          (pointerleave)="onGraphPointerUp($event)"
+          (pointercancel)="onGraphPointerUp($event)">
+          <!-- Glowing effects definitions -->
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 2 L 8 5 L 0 8 z" fill="#475569" />
+            </marker>
+            <filter id="glow-red" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+
+          <!-- Draw Connection Edges -->
+          @for (edge of visualEdges(); track edge.source + '-' + edge.target) {
+            <g class="graph-edge">
+              <path 
+                [attr.d]="'M ' + edge.x1 + ' ' + edge.y1 + ' C ' + (edge.x1 + 80) + ' ' + edge.y1 + ', ' + (edge.x2 - 80) + ' ' + edge.y2 + ', ' + edge.x2 + ' ' + edge.y2"
+                stroke="#475569" 
+                stroke-width="2" 
+                fill="none" 
+                marker-end="url(#arrow)"
+                stroke-dasharray="4,4"
+              />
+              <text [attr.x]="(edge.x1 + edge.x2)/2" [attr.y]="(edge.y1 + edge.y2)/2 - 6" font-size="8" fill="#94a3b8" text-anchor="middle" font-weight="bold">
+                {{ edge.type }}
+              </text>
+            </g>
+          }
+
+          <!-- Draw Nodes -->
+          @for (node of visualNodes(); track node.id) {
+            <g
+              class="graph-node"
+              [class.is-dragging]="isDraggingNode(node.id)"
+              (pointerdown)="onGraphPointerDown(node, $event)">
+              <!-- Glowing shadow under critical items -->
+              <rect 
+                [attr.x]="node.x - 2" 
+                [attr.y]="node.y - 2" 
+                width="204" 
+                height="64" 
+                rx="8" 
+                fill="transparent" 
+                [attr.stroke]="node.state === 'SLA_CRITICAL' ? '#ef4444' : (node.state === 'BLOCKED' ? '#f59e0b' : 'transparent')"
+                stroke-width="4"
+                [attr.filter]="node.state === 'SLA_CRITICAL' ? 'url(#glow-red)' : null"
+                opacity="0.3"
+              />
+              <!-- Node body -->
+              <rect 
+                [attr.x]="node.x" 
+                [attr.y]="node.y" 
+                width="200" 
+                height="60" 
+                rx="6" 
+                [attr.fill]="node.state === 'SLA_CRITICAL' ? 'rgba(239, 68, 68, 0.1)' : (node.state === 'BLOCKED' ? 'rgba(245, 158, 11, 0.1)' : '#ffffff')" 
+                [attr.stroke]="node.state === 'SLA_CRITICAL' ? '#ef4444' : (node.state === 'BLOCKED' ? '#f59e0b' : (node.state === 'PUBLISHED' ? '#10b981' : '#475569'))" 
+                stroke-width="1.5" 
+              />
+              <!-- Node Icon Tag background -->
+              <rect
+                [attr.x]="node.x + 8"
+                [attr.y]="node.y + 12"
+                width="36"
+                height="36"
+                rx="4"
+                [attr.fill]="node.type === 'TASK' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(167, 139, 250, 0.15)'"
+              />
+              <!-- Type Icon -->
+              <text 
+                [attr.x]="node.x + 26" 
+                [attr.y]="node.y + 35" 
+                font-family="Material Icons" 
+                font-size="18" 
+                [attr.fill]="node.type === 'TASK' ? '#3b82f6' : '#a78bfa'" 
+                text-anchor="middle"
+              >
+                {{ node.type === 'TASK' ? 'assignment' : 'description' }}
+              </text>
+              <!-- Node label -->
+              <text 
+                [attr.x]="node.x + 52" 
+                [attr.y]="node.y + 26" 
+                font-size="11" 
+                fill="#0f172a" 
+                font-weight="bold"
+              >
+                {{ node.title.length > 20 ? node.title.substring(0, 18) + '...' : node.title }}
+              </text>
+              <!-- State label -->
+              <text 
+                [attr.x]="node.x + 52" 
+                [attr.y]="node.y + 44" 
+                font-size="9" 
+                [attr.fill]="node.state === 'SLA_CRITICAL' ? '#fca5a5' : (node.state === 'BLOCKED' ? '#fde047' : '#94a3b8')" 
+                font-weight="bold"
+              >
+                {{ node.state }}
+              </text>
+            </g>
+          }
+        </svg>
+      </div>
+
+      <!-- Graph inspector sidebar with Smart Document Metadata Extraction -->
+      <div class="graph-inspector">
+        @if (!selectedGraphNode()) {
+          <div class="empty-inspector">
+            <mat-icon>info</mat-icon>
+            <p>Selecciona cualquier nodo del grafo para auditar sus relaciones vivas y SLA.</p>
+          </div>
+        } @else {
+          <div class="inspector-card" [class.danger]="selectedGraphNode().state === 'SLA_CRITICAL'" [class.warning]="selectedGraphNode().state === 'BLOCKED'">
+            <div class="inspector-header">
+              <span class="type-badge">{{ selectedGraphNode().type }}</span>
+              <h4>{{ selectedGraphNode().title }}</h4>
+            </div>
+            
+            <div class="inspector-body">
+              <div class="inspector-row">
+                <span class="lbl">ID Nodo:</span>
+                <span class="val">{{ selectedGraphNode().id }}</span>
+              </div>
+              <div class="inspector-row">
+                <span class="lbl">Estado:</span>
+                <span class="val status-highlight">{{ selectedGraphNode().state }}</span>
+              </div>
+              <div class="inspector-row">
+                <span class="lbl">Estado SLA:</span>
+                <span class="val">{{ selectedGraphNode().state === 'SLA_CRITICAL' ? 'CRITICO' : 'EN TIEMPO' }}</span>
+              </div>
+              
+              <!-- Smart Document Metadata Extraction Panel (Only for Document nodes) -->
+              @if (selectedGraphNode().type === 'DOCUMENT') {
+                <div class="smart-metadata-box">
+                  <div class="sm-header">
+                    <mat-icon class="sm-icon">psychology</mat-icon>
+                    <span>Metadatos del documento</span>
+                  </div>
+                  <div class="sm-grid">
+                    <div class="sm-row"><span>Versión:</span><strong>v1.0 (Activa)</strong></div>
+                    <div class="sm-row"><span>Tipo:</span><strong>Contrato Operativo</strong></div>
+                    <div class="sm-row"><span>Firmantes:</span><strong>Supervisor, Analista</strong></div>
+                    <div class="sm-row"><span>Keywords:</span><strong>SLA, Confidencialidad, RRHH</strong></div>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Role Action Restrictive Controls -->
+            <div class="inspector-actions">
+              @if (currentRole() === 'Auditor') {
+                <p class="role-alert">Acciones restringidas en modo Auditor (Solo Lectura).</p>
+              } @else {
+                <button class="wf-btn-primary full-width" [routerLink]="['/documentos/editar', selectedGraphNode().id]" *ngIf="selectedGraphNode().type === 'DOCUMENT'">
+                  ABRIR DOCUMENTO (DMS)
+                </button>
+                <button class="wf-btn-primary full-width" [routerLink]="['/detalle', selectedGraphNode().id]" *ngIf="selectedGraphNode().type === 'TASK'">
+                  RESOLVER SOLICITUD
+                </button>
+                <button class="wf-btn-secondary full-width" (click)="selectedGraphNode().state = 'ACTIVE'" *ngIf="selectedGraphNode().state === 'SLA_CRITICAL' && currentRole() === 'Supervisor'">
+                  ANULAR ALERTA DE SLA
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Operational Core Grid -->
+  <div class="operational-workspace-grid">
+    
+    <!-- Left Column: Critical SLA Alerts -->
+    <div class="operational-panel sla-panel op-card-glass">
+      <div class="panel-header">
+        <div class="title-with-badge">
+          <mat-icon class="icon-sla">alarm</mat-icon>
+          <h3>Alertas Críticas de SLA</h3>
+        </div>
+        <span class="panel-count badge-vencido">{{ attention.activeUrgentAlertsCount() }}</span>
+      </div>
+      
+      <div class="panel-content">
+        @if (attention.attentionTargets().length === 0) {
+          <div class="empty-state">
+            <mat-icon>verified</mat-icon>
+            <p>Todos los acuerdos de servicio en orden</p>
+          </div>
+        } @else {
+          <div class="alert-list">
+            @for (target of attention.attentionTargets(); track target.id) {
+              <div class="alert-item" 
+                [class.op-severity-critical]="target.state === 'SLA_CRITICAL'" 
+                [class.op-severity-blocked]="target.state === 'REJECTED_BY_POLICY'">
+                <div class="alert-status-dot"></div>
+                <div class="alert-info">
+                  <span class="alert-title">{{ target.title }}</span>
+                  <span class="alert-meta">
+                    @if (target.state === 'SLA_CRITICAL') {
+                      <mat-icon class="micro-icon">timer</mat-icon> <span>Acción requerida inmediata • Excede límite SLA</span>
+                    } @else {
+                      <mat-icon class="micro-icon">gavel</mat-icon> <span>Rechazado por política de cumplimiento</span>
+                    }
+                  </span>
+                </div>
+                <button class="action-btn" [routerLink]="['/detalle', target.id]">RESOLVER</button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Middle Column: Blocked Dependencies (Demarcated cleanly for end users) -->
+    <div class="operational-panel blockages-panel op-card-glass">
+      <div class="panel-header">
+        <div class="title-with-badge">
+          <mat-icon class="icon-blocked">alt_route</mat-icon>
+          <h3>Dependencias Bloqueadas</h3>
+        </div>
+        <span class="panel-count badge-por-vencer">{{ activeBlockedFlows().length }}</span>
+      </div>
+
+      <div class="panel-content">
+        @if (activeBlockedFlows().length === 0) {
+          <div class="empty-state">
+            <mat-icon>task_alt</mat-icon>
+            <p>Ningún proceso detenido por dependencias externas</p>
+          </div>
+        } @else {
+          <div class="blockage-list">
+            @for (block of activeBlockedFlows(); track block.taskName) {
+              <div class="blockage-card op-severity-blocked">
+                <div class="flow-step main-task">
+                  <mat-icon class="flow-icon">play_arrow</mat-icon>
+                  <span class="step-label">
+                    El proceso <strong>{{ block.taskName }}</strong>
+                  </span>
+                </div>
+                <div class="flow-connection">
+                  <div class="connection-line"></div>
+                  <div class="connection-arrow"></div>
+                </div>
+                <div class="flow-step blocker-node">
+                  <mat-icon class="flow-icon error-icon">lock</mat-icon>
+                  <span class="step-label error-text">
+                    está detenido esperando por: <strong>{{ block.blockedBy }}</strong>
+                  </span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Right Column: Live Collaborators -->
+    <div class="operational-panel collaborators-panel op-card-glass">
+      <div class="panel-header">
+        <div class="title-with-badge">
+          <mat-icon class="icon-collaborators">people</mat-icon>
+          <h3>Colaboradores en Línea</h3>
+        </div>
+        <span class="panel-count badge-online">{{ activePeersList().length }}</span>
+      </div>
+
+      <div class="panel-content">
+        @if (activePeersList().length === 0) {
+          <div class="empty-state">
+            <mat-icon>person_outline</mat-icon>
+            <p>No hay peers activos en este contexto</p>
+          </div>
+        } @else {
+          <div class="collaborator-grid">
+            @for (peer of activePeersList(); track peer.username) {
+              <div class="collaborator-card">
+                <div class="peer-header">
+                  <div class="peer-avatar">
+                    {{ peer.username.substring(0, 2).toUpperCase() }}
+                    <span class="peer-status-dot"></span>
+                  </div>
+                  <div class="peer-details">
+                    <span class="peer-name">{{ peer.username }}</span>
+                    <span class="peer-location">Focus: {{ peer.elementIdFocus || 'Panel Principal' }}</span>
+                  </div>
+                </div>
+                <div class="peer-action">
+                  <mat-icon>remove_red_eye</mat-icon>
+                  <span>{{ getPeerActivityLabel(peer) }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Panel: Gorgeous Governance & Audit History Timeline -->
+  <div class="operational-panel stream-panel op-card-glass">
+    <div class="panel-header">
+      <div class="title-with-badge">
+        <mat-icon class="icon-stream">history_edu</mat-icon>
+        <h3>Bitacora de auditoria y trazabilidad</h3>
+      </div>
+      <div class="live-pulse">
+        <span class="pulse-dot"></span>
+        <span class="pulse-text">AUDITORIA ACTIVA</span>
+      </div>
+    </div>
+
+    <div class="panel-content scrollable-stream">
+      @if (activity.liveEvents().length === 0) {
+        <div class="empty-state">
+          <mat-icon>history</mat-icon>
+          <p>Esperando eventos del sistema...</p>
+        </div>
+      } @else {
+        <div class="event-stream-timeline">
+          @for (event of activity.liveEvents(); track event.eventId) {
+            <div class="timeline-row animate-slide-in" [class]="getEventPriorityClass(event.metadata?.priority)">
+              <div class="timeline-bullet">
+                <mat-icon class="timeline-icon">check_circle</mat-icon>
+              </div>
+              <div class="timeline-info">
+                <div class="timeline-meta">
+                  <span class="time">{{ event.timestamp | date:'HH:mm:ss' }}</span>
+                  <span class="actor">Realizado por: <strong>{{ event.actor }}</strong></span>
+                  <span class="event-type-badge">{{ getFriendlyEventType(event.eventType) }}</span>
+                </div>
+                <p class="timeline-desc">{{ event.message }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>

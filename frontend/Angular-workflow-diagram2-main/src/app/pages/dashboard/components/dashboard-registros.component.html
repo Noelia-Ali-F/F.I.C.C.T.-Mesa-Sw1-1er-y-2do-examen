@@ -1,0 +1,201 @@
+<div class="wf-layout-grid wf-fade-in-section">
+  <div class="wf-layout-main">
+    <app-page-section title="Bandeja de registros" [badgeText]="solicitudes.length + ' resultados'" icon="lists">
+
+      <div class="wf-records-search">
+        <input
+          [formControl]="searchControl"
+          (keyup.enter)="buscarRequested.emit()"
+          type="text"
+          placeholder="Buscar por titulo o codigo"
+          class="wf-input" />
+        <button (click)="buscarRequested.emit()" class="wf-btn-primary wf-records-search__btn" aria-label="Buscar solicitudes">
+          Buscar
+        </button>
+        @if (hayBusquedaActiva()) {
+          <button
+            type="button"
+            class="wf-btn-secondary wf-clean-btn"
+            (click)="limpiarBusquedaRequested.emit()">
+            Limpiar
+          </button>
+        }
+      </div>
+
+      <div class="wf-filters-wrap">
+        <div class="wf-filter-group">
+          @for (estado of estadosFlujo; track estado) {
+            <button
+              type="button"
+              class="wf-filter-btn"
+              [class.wf-filter-btn--active]="filtroEstado === estado"
+              (click)="estadoToggled.emit(estado)">
+              {{ etiquetaEstado(estado) }}
+            </button>
+          }
+        </div>
+
+        <div class="wf-filter-group wf-filter-group--sla">
+          @for (estadoSla of estadosSlaFiltro; track estadoSla) {
+            <button
+              type="button"
+              class="wf-filter-btn"
+              [class.wf-filter-btn--active]="filtroSla === estadoSla"
+              (click)="slaToggled.emit(estadoSla)">
+              {{ etiquetaSla(estadoSla) }}
+            </button>
+          }
+        </div>
+      </div>
+
+      @if (filtroEstado || filtroSla) {
+        <div class="wf-filter-pill">
+          <span>
+            Filtros:
+            @if (filtroEstado; as estadoActivo) {
+              <strong> {{ etiquetaEstado(estadoActivo) }} </strong>
+            }
+            @if (filtroSla; as slaActivo) {
+              <strong> {{ etiquetaSla(slaActivo) }} </strong>
+            }
+          </span>
+          <button type="button" (click)="limpiarFiltrosRequested.emit()">Limpiar filtros</button>
+        </div>
+      }
+
+      <div class="wf-records-list">
+        @for (solicitud of solicitudes; track solicitud.id) {
+          <a [routerLink]="['/detalle', solicitud.id]" class="wf-record-item wf-record-item--horizontal">
+            <div class="wf-record-item__top">
+              <span class="wf-record-item__code">#{{ solicitud.codigoSeguimiento }}</span>
+              <span class="wf-record-item__date">{{ solicitud.fechaCreacion | date:'mediumDate' }}</span>
+            </div>
+
+            <p class="wf-record-item__title">{{ solicitud.titulo }}</p>
+
+            <div class="wf-record-item__chips">
+              <span class="wf-status text-[11px]"
+                [class.bg-red-50]="solicitud.prioridad === 'URGENTE'"
+                [class.text-red-700]="solicitud.prioridad === 'URGENTE'"
+                [class.bg-orange-50]="solicitud.prioridad === 'ALTA'"
+                [class.text-orange-700]="solicitud.prioridad === 'ALTA'"
+                [class.bg-sky-50]="solicitud.prioridad === 'MEDIA'"
+                [class.text-sky-700]="solicitud.prioridad === 'MEDIA'"
+                [class.bg-slate-100]="solicitud.prioridad === 'BAJA'"
+                [class.text-slate-600]="solicitud.prioridad === 'BAJA'">
+                <span class="wf-status-dot"
+                  [class.bg-red-500]="solicitud.prioridad === 'URGENTE'"
+                  [class.bg-orange-500]="solicitud.prioridad === 'ALTA'"
+                  [class.bg-sky-500]="solicitud.prioridad === 'MEDIA'"
+                  [class.bg-slate-400]="solicitud.prioridad === 'BAJA'"></span>
+                {{ solicitud.prioridad }}
+              </span>
+
+              <span class="wf-status text-[11px]"
+                [class.bg-slate-100]="solicitud.estado === 'PENDIENTE'"
+                [class.text-slate-700]="solicitud.estado === 'PENDIENTE'"
+                [class.bg-blue-50]="solicitud.estado === 'EN_REVISION'"
+                [class.text-blue-700]="solicitud.estado === 'EN_REVISION'"
+                [class.bg-emerald-50]="solicitud.estado === 'APROBADO'"
+                [class.text-emerald-700]="solicitud.estado === 'APROBADO'"
+                [class.bg-red-50]="solicitud.estado === 'RECHAZADO'"
+                [class.text-red-700]="solicitud.estado === 'RECHAZADO'">
+                <span class="wf-status-dot"
+                  [class.bg-slate-400]="solicitud.estado === 'PENDIENTE'"
+                  [class.bg-blue-500]="solicitud.estado === 'EN_REVISION'"
+                  [class.bg-emerald-500]="solicitud.estado === 'APROBADO'"
+                  [class.bg-red-500]="solicitud.estado === 'RECHAZADO'"></span>
+                {{ solicitud.estado }}
+              </span>
+
+              <span class="wf-badge text-[11px]" [class]="claseBadgeSla(solicitud.estadoSla)">
+                {{ etiquetaSla(solicitud.estadoSla) }}
+              </span>
+            </div>
+
+            <div class="wf-record-item__meta">
+              <span>{{ solicitud.departamentoActual }}</span>
+              <span>{{ solicitud.totalEventos || 0 }} eventos</span>
+            </div>
+          </a>
+        } @empty {
+          <ui-empty-state message="No se encontraron registros para este filtro." />
+        }
+      </div>
+    </app-page-section>
+  </div>
+
+  <aside class="wf-layout-side">
+    <app-page-section title="Radar operativo" subtitle="ALERTAS Y CAPACIDAD" icon="radar">
+
+      <div class="wf-radar-sla">
+        @for (estadoSla of estadosSlaVisibles; track estadoSla) {
+          <span class="wf-badge" [class]="claseBadgeSla(estadoSla)">
+            {{ etiquetaSla(estadoSla) }}: {{ contadoresSla[estadoSla] }}
+          </span>
+        }
+        <span class="wf-badge wf-badge-slate">Cerrado: {{ contadoresSla.CERRADO }}</span>
+      </div>
+
+      <div class="wf-radar-cards">
+        <div class="wf-radar-section">
+          <h4>Alertas prioritarias</h4>
+          <div class="wf-radar-list">
+            @for (solicitud of registrosCriticos; track solicitud.id) {
+              <a [routerLink]="['/detalle', solicitud.id]" class="wf-radar-alert">
+                <span class="wf-radar-alert__code">#{{ solicitud.codigoSeguimiento }}</span>
+                <span class="wf-radar-alert__title">{{ solicitud.titulo }}</span>
+                <span class="wf-radar-alert__dept">{{ solicitud.departamentoActual }}</span>
+              </a>
+            } @empty {
+              <ui-empty-state message="No hay alertas activas." />
+            }
+          </div>
+        </div>
+
+        <div class="wf-radar-section">
+          <h4>Carga por departamento</h4>
+          <div class="wf-dept-list">
+            @for (item of topDepartamentos; track item.departamento) {
+              <div class="wf-dept-row">
+                <div class="wf-dept-row__head">
+                  <span>{{ item.departamento }}</span>
+                  <span>{{ item.total }} · urgentes {{ item.urgentes }}</span>
+                </div>
+                <div class="wf-dept-row__bar">
+                  <span [style.width.%]="porcentajeCargaDepartamento(item.total)"></span>
+                </div>
+              </div>
+            } @empty {
+              <ui-empty-state message="Sin datos de carga por departamento." />
+            }
+          </div>
+        </div>
+
+        <div class="wf-radar-section">
+          <h4>Usuarios online</h4>
+          @if (presenciaGeneradoEn; as fechaPresencia) {
+            <p class="wf-online-sync">Actualizado {{ fechaPresencia | date:'shortTime' }}</p>
+          }
+          <div class="wf-online-list">
+            @for (usuario of usuariosOnlineVisibles; track usuario.username) {
+              <div class="wf-online-row">
+                <div class="wf-online-row__avatar overflow-hidden">
+                  @if (authService.getValidAvatar(usuario.avatarUrl); as url) {
+                    <img [src]="url.startsWith('http') || url.startsWith('/icons/') ? url : basePath + url" class="h-full w-full object-cover">
+                  }
+                </div>
+                <div class="wf-online-row__meta">
+                  <span>{{ usuario.nombreCompleto }}</span>
+                  <small>{{ usuario.rol }} · {{ usuario.departamento }}</small>
+                </div>
+              </div>
+            } @empty {
+              <ui-empty-state message="Sin usuarios online visibles." />
+            }
+          </div>
+        </div>
+      </div>
+    </app-page-section>
+  </aside>
+</div>

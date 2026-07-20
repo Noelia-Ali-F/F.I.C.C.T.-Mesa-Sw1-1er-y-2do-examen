@@ -1,0 +1,49 @@
+<div [class]="hostClass()">
+  <div class="robot-container">
+    <!-- Status Aura -->
+    <div class="robot-aura"></div>
+
+    <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" class="robot-svg">
+      <!-- Antenna -->
+      <g class="antenna">
+        <line x1="50" y1="25" x2="50" y2="10" stroke="#0d9488" stroke-width="2" />
+        <circle cx="50" cy="8" r="4" [attr.fill]="antennaColor()" class="antenna-bulb" />
+      </g>
+
+      <!-- Head -->
+      <rect x="25" y="25" width="50" height="40" rx="12" fill="#f8ad56" class="robot-head" />
+
+      <!-- Screen/Face -->
+      <rect x="30" y="32" width="40" height="26" rx="6" fill="#042f2e" />
+
+      <!-- Eyes -->
+      <g class="eyes">
+        <circle cx="40" cy="45" r="3" [attr.fill]="eyeColor()" class="eye left-eye" />
+        <circle cx="60" cy="45" r="3" [attr.fill]="eyeColor()" class="eye right-eye" />
+      </g>
+
+      <!-- Mouth/Voice lines (visible when talking) -->
+      <g class="mouth" [style.opacity]="state() === 'talking' ? 1 : 0">
+        <line x1="42" y1="52" x2="58" y2="52" stroke="#5eead4" stroke-width="1.5" stroke-linecap="round"
+          class="voice-wave" />
+      </g>
+
+      <!-- Body -->
+      <path d="M30 65 Q50 65 70 65 L75 100 Q50 105 25 100 Z" fill="#0d9488" />
+
+      <!-- Chest Panel -->
+      <rect x="40" y="75" width="20" height="15" rx="3" fill="#f8ad56" opacity="0.5" />
+
+      <!-- Floating Arms -->
+      <circle cx="20" cy="80" r="5" fill="#14b8a6" class="arm left-arm" />
+      <circle cx="80" cy="80" r="5" fill="#14b8a6" class="arm right-arm" />
+    </svg>
+  </div>
+
+  @if (!compact()) {
+  <div class="robot-label">
+    <span class="robot-label-dot" [style.background-color]="antennaColor()"></span>
+    {{ statusLabel() }}
+  </div>
+  }
+</div>

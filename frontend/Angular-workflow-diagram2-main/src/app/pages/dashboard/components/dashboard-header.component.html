@@ -1,0 +1,44 @@
+<section class="wf-hero">
+  <div class="wf-hero__main">
+    <div class="wf-hero__title-row">
+      <div class="wf-hero__mark">WF</div>
+      <div>
+        <p class="wf-view-head__eyebrow">Panel principal</p>
+        <h1 class="wf-hero__title">Centro de control del flujo</h1>
+        @if (role) {
+        <p class="wf-hero__subtitle">{{ role }} · {{ departamento }}</p>
+        }
+      </div>
+    </div>
+
+    @if (canCreate) {
+    <button routerLink="/crear" class="wf-btn-primary wf-hero__cta">
+      Nueva Solicitud
+    </button>
+    }
+  </div>
+
+  <div class="wf-kpi-grid">
+    <ui-kpi-tile label="Total solicitudes" [value]="totalSolicitudes" icon="description" />
+    <ui-kpi-tile label="SLA Crítico" [value]="slaCritico" icon="schedule" tone="danger" />
+    <ui-kpi-tile label="Urgentes" [value]="totalUrgentes" icon="warning" tone="warning" />
+    <ui-kpi-tile label="Auditores Online" [value]="onlineVisible" icon="groups" tone="teal" />
+  </div>
+</section>
+
+<div class="wf-toolbar-container">
+  <div class="wf-tabs-container">
+    <button type="button" class="wf-tab-btn" [class.wf-tab-btn--active]="activeView === 'OPERATIVO'"
+      (click)="viewChanged.emit('OPERATIVO')">
+      Vista Operativa
+    </button>
+    <button type="button" class="wf-tab-btn" [class.wf-tab-btn--active]="activeView === 'REGISTROS'"
+      (click)="viewChanged.emit('REGISTROS')">
+      Gestión de Solicitudes
+    </button>
+  </div>
+
+  <div class="wf-toolbar-actions">
+    <a routerLink="/informes" class="wf-btn-secondary wf-toolbar-btn">Ver informes</a>
+  </div>
+</div>

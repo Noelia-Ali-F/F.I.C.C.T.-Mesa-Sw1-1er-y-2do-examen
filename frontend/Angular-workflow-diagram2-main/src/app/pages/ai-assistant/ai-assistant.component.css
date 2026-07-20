@@ -1,0 +1,43 @@
+:host {
+  display: block;
+  width: 100%;
+  --theme-border-text-color: #0f172a;
+}
+
+/* Custom scrollbars for a clean workspace feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #0f766e;
+}
+
+/* Message bubble smooth hover transition */
+.group:hover .relative {
+  transform: translateY(-1px);
+}
+
+/* Custom layout scroll adjustment */
+#scrollContainer {
+  scroll-behavior: smooth;
+}
+
+/* Clean buttons transition styles */
+button {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+button:active {
+  transform: scale(0.98);
+}

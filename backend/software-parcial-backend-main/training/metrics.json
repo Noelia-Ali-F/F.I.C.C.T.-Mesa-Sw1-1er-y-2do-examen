@@ -1,0 +1,75 @@
+{
+  "dataset": "routing-risk-training.csv",
+  "source": "Eventos creaci\u00f3n/escalamiento SLA persistidos de WF-2026-001..007",
+  "features": [
+    "priority_norm",
+    "sla_factor",
+    "history_factor"
+  ],
+  "featureSpecification": {
+    "priority_norm": "Categor\u00eda persistida: BAJA=0.1, MEDIA=0.4, ALTA=0.7, URGENTE=1.0; ausente=BAJA",
+    "sla_factor": "Minutos restantes: vencido=1.0, <=60=0.8, <=240=0.45, >240 o sin fecha=0.1",
+    "history_factor": "min(1.0, cantidad_eventos_persistidos/10); sin historial=0.0"
+  },
+  "label": "1 si existe escalamiento SLA; 0 en observaci\u00f3n de creaci\u00f3n",
+  "architecture": "3-ReLU(4)-Sigmoid(1)",
+  "epochs": 2500,
+  "learningRate": 0.08,
+  "optimizer": "Descenso de gradiente estoc\u00e1stico, BCE con derivada Sigmoid+BCE",
+  "reproducibility": "Inicializaci\u00f3n determinista expl\u00edcita; no usa n\u00fameros aleatorios",
+  "warning": "Modelo experimental con datos limitados; las m\u00e9tricas no demuestran generalizaci\u00f3n productiva",
+  "train": {
+    "samples": 10,
+    "classDistribution": {
+      "negative": 5,
+      "positive": 5
+    },
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "confusionMatrix": {
+      "tn": 5,
+      "fp": 0,
+      "fn": 0,
+      "tp": 5
+    },
+    "binaryCrossEntropy": 0.0005836126771990241,
+    "outputs": [
+      0.0010962099929071537,
+      0.9999295883951547,
+      0.0010962099929071537,
+      0.9999295883951547,
+      0.0010962099929071537,
+      0.9999295883951547,
+      0.0010962099929071537,
+      0.9999295883951547,
+      0.0010962099929071537,
+      0.9999295883951547
+    ]
+  },
+  "validation": {
+    "samples": 4,
+    "classDistribution": {
+      "negative": 2,
+      "positive": 2
+    },
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "confusionMatrix": {
+      "tn": 2,
+      "fp": 0,
+      "fn": 0,
+      "tp": 2
+    },
+    "binaryCrossEntropy": 0.0005962350743257453,
+    "outputs": [
+      0.0010962099929071537,
+      0.9999295883951547,
+      0.0010962099929071537,
+      0.9998791036361888
+    ]
+  }
+}

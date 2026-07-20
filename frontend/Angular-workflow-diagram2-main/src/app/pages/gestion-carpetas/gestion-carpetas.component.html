@@ -1,0 +1,378 @@
+<div class="space-y-6 animate-fade-in pb-12 text-slate-800 font-sans">
+
+  <!-- Unified Page Header -->
+  <app-page-header title="Carpetas de Proceso" subtitle="Gestión de solicitudes y documentos por carpeta de etapa"
+    eyebrow="DMS EXPEDIENTES" icon="folder_open" gradientClasses="from-teal-500 via-emerald-400 to-amber-400">
+    <!-- Active Process Selector & Global Actions projected to the right -->
+    <div class="flex items-center gap-2 bg-slate-100 border border-slate-200/40 rounded-xl px-3.5 py-1.5"
+      data-tooltip="Definición de flujo de proceso BPMN activo para explorar etapas">
+      <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Proceso:</span>
+      <select [ngModel]="selectedWorkflowKey()" (ngModelChange)="onWorkflowChanged($event)"
+        class="bg-transparent border-none outline-none font-bold text-xs text-slate-700 cursor-pointer">
+        @for (def of definitions(); track def.key) {
+        <option [value]="def.key">{{ def.name }}</option>
+        }
+      </select>
+    </div>
+
+    <button (click)="cargarCarpetasYTickets()" [disabled]="loading()"
+      class="wf-btn-primary text-xs py-2.5 px-4 shadow-md cursor-pointer"
+      data-tooltip="Sincronizar todas las carpetas e historial de expedientes con el servidor">
+      <mat-icon fontSet="material-symbols-rounded" class="!w-4 !h-4 !text-[16px]">sync</mat-icon>
+      <span>Sincronizar</span>
+    </button>
+  </app-page-header>
+
+  <!-- Loading State -->
+  @if (loading()) {
+  <div
+    class="flex flex-col items-center justify-center py-24 bg-white border border-slate-200/60 rounded-2xl shadow-sm">
+    <div class="w-12 h-12 border-3 border-teal-100 border-t-teal-750 rounded-full animate-spin"></div>
+    <p class="text-xs text-slate-400 font-bold tracking-widest uppercase mt-6 animate-pulse">Estructurando
+      directorios...</p>
+  </div>
+  } @else {
+  <!-- Main Column Split (Gold-Standard 3-Column Document Workspace) -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+    <!-- COLUMN 1: Directory Tree (3 cols) -->
+    <div class="lg:col-span-3 directory-sidebar">
+
+      <!-- Breadcrumb / Header -->
+      <div class="flex items-center justify-between pb-3.5 mb-2 border-b border-slate-100">
+        <div class="sidebar-title-row">
+          <mat-icon fontSet="material-symbols-rounded"
+            class="text-slate-400 !w-4 !h-4 !text-[16px]">snippet_folder</mat-icon>
+          <h2 class="sidebar-heading">
+            Directorios (Etapas)
+          </h2>
+        </div>
+        @if (selectedFolderId()) {
+        <button (click)="clearFolderSelection()"
+          class="text-[10px] font-bold text-teal-700 hover:text-teal-900 flex items-center gap-0.5 cursor-pointer border-none bg-transparent"
+          data-tooltip="Ver todas las solicitudes del proceso completo">
+          <mat-icon fontSet="material-symbols-rounded" class="!w-3.5 !h-3.5 !text-[14px]">view_list</mat-icon>
+          Ver todos
+        </button>
+        }
+      </div>
+
+      <!-- Folders Tree View -->
+      <div class="folder-tree">
+        @if (folders().length === 0) {
+        <div class="empty-state-card">
+          <mat-icon fontSet="material-symbols-rounded" class="empty-state-icon mb-1">folder_off</mat-icon>
+          <p class="empty-state-text">No se detectaron tareas activas en este proceso.</p>
+        </div>
+        } @else {
+        @for (folder of folders(); track folder.id) {
+        <div (click)="selectFolder(folder.id)" class="folder-node-card"
+          [class.is-active]="selectedFolderId() === folder.id" [class.has-tickets]="folder.ticketCount > 0"
+          [attr.data-tooltip]="'Explorar expedientes en la etapa: ' + folder.nombre">
+          <div class="flex items-center gap-3 overflow-hidden">
+            <div class="folder-icon-box">
+              <mat-icon fontSet="material-symbols-rounded" class="!w-4 !h-4 !text-[18px]">
+                {{ selectedFolderId() === folder.id ? 'folder_open' : 'folder' }}
+              </mat-icon>
+            </div>
+            <div class="overflow-hidden">
+              <h3 class="folder-label-title">{{ folder.nombre }}</h3>
+              <div class="folder-label-subtitle">
+                <span class="folder-status-dot"></span>
+                <span>{{ folder.departamento }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Count Badge -->
+          <span class="folder-counter-badge">
+            {{ folder.ticketCount }}
+          </span>
+        </div>
+        }
+        }
+      </div>
+    </div>
+
+    <!-- COLUMN 2: Files (Tickets) List Container (4 cols) -->
+    <div class="lg:col-span-4 flex flex-col gap-6">
+      <div class="wf-card p-5">
+
+        <!-- Inner header with info and Search bar -->
+        <div class="flex flex-col gap-3 pb-4 mb-4 border-b border-slate-100">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-teal-50/50 rounded-xl text-teal-700 shrink-0">
+              <mat-icon fontSet="material-symbols-rounded" class="!w-5 !h-5 !text-[20px]">
+                {{ selectedFolder() ? 'folder_open' : 'snippet_folder' }}
+              </mat-icon>
+            </div>
+            <div class="min-w-0">
+              <h2 class="text-xs font-black text-slate-800 truncate" [title]="selectedFolder() ? selectedFolder()!.nombre : 'Todos los expedientes'">
+                {{ selectedFolder() ? selectedFolder()!.nombre : 'Explorando todos los expedientes' }}
+              </h2>
+              <p class="text-[8.5px] text-slate-400 font-bold uppercase tracking-wider mt-0.5 truncate">
+                @if (selectedFolder()) {
+                Depto: <span class="text-teal-750 font-extrabold">{{ selectedFolder()!.departamento }}</span>
+                } @else {
+                Listado consolidado de solicitudes activas
+                }
+              </p>
+            </div>
+          </div>
+
+          <!-- Search input -->
+          <div class="relative w-full">
+            <input type="text" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)"
+              placeholder="Buscar expedientes..." class="w-full text-xs wf-input px-3.5 py-2 font-semibold"
+              data-tooltip="Buscar por título, código o descripción de solicitud" />
+          </div>
+        </div>
+
+        <!-- Files Vertical List Stack -->
+        @if (filteredTickets().length === 0) {
+        <div class="empty-state-card py-16">
+          <mat-icon fontSet="material-symbols-rounded" class="empty-state-icon mb-2">folder_zip</mat-icon>
+          <p class="empty-state-text">No se encontraron expedientes.</p>
+        </div>
+        } @else {
+        <div class="ticket-grid">
+          @for (ticket of filteredTickets(); track ticket.id) {
+          <div (click)="selectTicket(ticket)" class="ticket-item-card"
+            [class.is-selected]="selectedTicket()?.id === ticket.id"
+            data-tooltip="Haga clic para ver los archivos DMS e inspeccionar el expediente">
+            <div>
+              <div class="ticket-card-header">
+                <span class="ticket-code-tag">
+                  📂 COD. {{ ticket.codigoSeguimiento || 'SIN-COD' }}
+                </span>
+                <span [ngClass]="getPrioridadBadgeClass(ticket.prioridad)">
+                  {{ ticket.prioridad }}
+                </span>
+              </div>
+
+              <h3 class="ticket-card-title">
+                <mat-icon fontSet="material-symbols-rounded"
+                  class="text-[var(--theme-primary-color)] !w-4 !h-4 !text-[16px]">feed</mat-icon>
+                {{ ticket.titulo }}
+              </h3>
+
+              <p class="ticket-card-desc">
+                {{ ticket.descripcion || 'Sin descripción detallada.' }}
+              </p>
+            </div>
+
+            <div class="ticket-card-footer">
+              <span class="ticket-date-lbl">
+                Fecha: {{ ticket.fechaCreacion | date:'dd/MM/yyyy' }}
+              </span>
+              <span class="ticket-owner-tag">
+                {{ ticket.usuarioCreador }}
+              </span>
+            </div>
+          </div>
+          }
+        </div>
+        }
+      </div>
+    </div>
+
+    <!-- COLUMN 3: Detailed Inspector Panel (5 cols) -->
+    <div class="lg:col-span-5 sticky-inspector">
+      @if (selectedTicket()) {
+      <div class="inspector-card animate-fade-in">
+
+        <!-- Header of Selected File Inspector -->
+        <div class="inspector-header mb-5 gap-4">
+          <div class="inspector-brand">
+            <div class="inspector-icon-wrapper">
+              <mat-icon fontSet="material-symbols-rounded" class="!w-5 !h-5 !text-[20px]">article</mat-icon>
+            </div>
+            <div>
+              <h3 class="inspector-title-h3">
+                Expediente: {{ selectedTicket()!.codigoSeguimiento || 'Detalles' }}
+              </h3>
+              <p class="inspector-subtitle truncate max-w-[200px]" [title]="selectedTicket()!.titulo">
+                {{ selectedTicket()!.titulo }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Reassign Folder Action -->
+          @if (movingTicketId() !== selectedTicket()!.id) {
+          <button (click)="iniciarReasignacion(selectedTicket()!.id!)"
+            class="wf-btn-primary px-3.5 py-2.5 text-[10px] shadow-sm cursor-pointer shrink-0"
+            data-tooltip="Reasignar este expediente a otra etapa del proceso BPMN">
+            <mat-icon fontSet="material-symbols-rounded" class="!w-4 !h-4 !text-[14px]">drive_file_move</mat-icon>
+            Mover
+          </button>
+          }
+        </div>
+
+        <!-- Reassignment Form Overlay -->
+        @if (movingTicketId() === selectedTicket()!.id) {
+        <div class="moving-panel-alert mb-5">
+          <div class="flex flex-col gap-3">
+            <div class="flex items-center gap-3">
+              <div class="moving-alert-icon-box">
+                <mat-icon fontSet="material-symbols-rounded" class="!w-5 !h-5 !text-[20px]">drive_file_move</mat-icon>
+              </div>
+              <div>
+                <h4 class="moving-alert-title">Mover expediente de workflow</h4>
+                <p class="moving-alert-subtitle mt-0.5">Selecciona el directorio o etapa de destino</p>
+              </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full">
+              <select [(ngModel)]="targetFolderId"
+                class="wf-input px-3.5 py-2 text-xs font-bold w-full cursor-pointer bg-white"
+                data-tooltip="Seleccione la etapa destino de BPMN para realizar la reasignación">
+                <option value="" disabled selected>Seleccione destino...</option>
+                @for (f of folders(); track f.id) {
+                @if (f.id !== selectedTicket()!.tareaActualId) {
+                <option [value]="f.id">{{ f.nombre }} ({{ f.departamento }})</option>
+                }
+                }
+              </select>
+
+              <div class="flex gap-1.5 mt-2 sm:mt-0">
+                <button (click)="ejecutarReasignacion()" [disabled]="!targetFolderId()"
+                  class="flex-1 sm:flex-none wf-btn-primary px-4.5 py-2 text-[10.5px] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-center">
+                  Mover
+                </button>
+                <button (click)="cancelarReasignacion()"
+                  class="flex-1 sm:flex-none wf-btn-secondary px-4.5 py-2 text-[10.5px] cursor-pointer text-center">
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        }
+
+        <!-- Dossier Details and DMS stacked vertically for clean fit -->
+        <div class="space-y-6">
+
+          <!-- Section 1: Metadata del Expediente -->
+          <div class="metadata-grid">
+            <h4 class="text-[9px] font-black uppercase text-teal-750 tracking-wider pb-1.5 border-b border-slate-200/50">
+              Metadatos del Expediente
+            </h4>
+
+            <div class="grid grid-cols-2 gap-4 text-xs">
+              <div>
+                <span class="metadata-label">Código Único</span>
+                <span class="metadata-value code">#{{ selectedTicket()!.codigoSeguimiento }}</span>
+              </div>
+              <div>
+                <span class="metadata-label">Iniciador</span>
+                <span class="metadata-value">{{ selectedTicket()!.usuarioCreador }}</span>
+              </div>
+              <div>
+                <span class="metadata-label">Fecha de Apertura</span>
+                <span class="metadata-value text-slate-600">{{ selectedTicket()!.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</span>
+              </div>
+              <div>
+                <span class="metadata-label">Estado de Auditoría</span>
+                <span class="inline-block px-2.5 py-1 bg-slate-900 text-white font-bold text-[9px] uppercase rounded-md tracking-wider mt-1.5 shadow-sm">
+                  {{ selectedTicket()!.estado }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div class="border-t border-slate-200/55 pt-3.5 mt-1.5">
+              <span class="metadata-label">Descripción de Trámite</span>
+              <p class="text-xs text-slate-600 leading-relaxed font-semibold mt-1 max-h-24 overflow-y-auto">
+                {{ selectedTicket()!.descripcion || 'Sin descripción detallada.' }}
+              </p>
+            </div>
+
+            <!-- View case details action -->
+            <div class="mt-2 pt-3 border-t border-slate-200/60">
+              <button (click)="verFichaTicket(selectedTicket()!.id!)"
+                class="w-full wf-btn-primary py-2.5 px-4 shadow-sm cursor-pointer"
+                data-tooltip="Ver la ficha de trámite completa con logs, comentarios e historial">
+                <mat-icon fontSet="material-symbols-rounded" class="!w-4 !h-4 !text-[16px]">open_in_new</mat-icon>
+                Abrir Ficha de Trámite
+              </button>
+            </div>
+          </div>
+
+          <!-- Section 2: Documentación Adjunta (DMS) -->
+          <div class="bg-slate-50/20 border border-slate-200/60 p-4.5 rounded-2xl">
+            <h4 class="text-[10px] font-black uppercase text-slate-550 tracking-wider mb-3.5 pb-2 border-b border-slate-200 flex items-center gap-1.5">
+              <mat-icon fontSet="material-symbols-rounded" class="text-slate-450 !w-4 !h-4 !text-[16px]">description</mat-icon>
+              Documentación Adjunta (DMS)
+            </h4>
+
+            @if (loadingDocs()) {
+            <div class="flex flex-col items-center justify-center py-10 gap-2">
+              <div class="w-8 h-8 border-3 border-teal-100 border-t-teal-700 rounded-full animate-spin"></div>
+              <span class="text-[9px] text-slate-450 font-bold uppercase tracking-wider animate-pulse text-center">
+                Obteniendo archivos del servidor...
+              </span>
+            </div>
+            } @else if (ticketDocs().length === 0) {
+            <div class="empty-state-card py-10">
+              <mat-icon fontSet="material-symbols-rounded" class="empty-state-icon mb-1.5">folder_zip</mat-icon>
+              <p class="empty-state-text text-[11px]">No hay ficheros cargados en este expediente.</p>
+            </div>
+            } @else {
+            <div class="dms-list">
+              @for (doc of ticketDocs(); track doc.id) {
+              <div class="dms-item">
+                <div class="flex items-center gap-3 overflow-hidden">
+                  <div class="dms-item-icon-box">
+                    <mat-icon fontSet="material-symbols-rounded" class="!w-5 !h-5 !text-[20px]">
+                      {{ doc.tipo === 'COLLABORATIVE' ? 'edit_note' : 'insert_drive_file' }}
+                    </mat-icon>
+                  </div>
+                  <div class="overflow-hidden">
+                    <h5 class="dms-item-title truncate" [title]="doc.nombre">{{ doc.nombre }}</h5>
+                    <p class="dms-item-meta truncate text-[9px]">
+                      v{{ doc.versionActual }} · Por: {{ doc.creadoPor }}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center gap-1.5 shrink-0" (click)="$event.stopPropagation()">
+                  @if (doc.tipo === 'COLLABORATIVE') {
+                  <a [routerLink]="['/documentos/editar', doc.id]" class="dms-item-action-btn"
+                    data-tooltip="Editar borrador colaborativo online en tiempo real">
+                    <mat-icon fontSet="material-symbols-rounded" class="!text-sm">edit</mat-icon>
+                  </a>
+                  } @else {
+                  <a [href]="basePath + '/api/v1/documentos/' + doc.id + '/descargar'" target="_blank"
+                    class="dms-item-action-btn" data-tooltip="Descargar archivo físico original">
+                    <mat-icon fontSet="material-symbols-rounded" class="!text-sm">download</mat-icon>
+                  </a>
+                  }
+                </div>
+              </div>
+              }
+            </div>
+            }
+          </div>
+
+        </div>
+      </div>
+      } @else {
+      <!-- Empty Inspector Placeholder -->
+      <div class="bg-white border border-slate-200/80 p-6 rounded-3xl shadow-sm text-center py-24 flex flex-col items-center justify-center gap-4">
+        <div class="h-12 w-12 bg-slate-50 rounded-full flex items-center justify-center text-slate-350 border border-slate-200/80">
+          <mat-icon fontSet="material-symbols-rounded" class="!text-2xl">source</mat-icon>
+        </div>
+        <div class="space-y-1">
+          <h4 class="text-xs font-black uppercase text-slate-800">Ningún expediente seleccionado</h4>
+          <p class="text-xs text-slate-400 font-bold uppercase tracking-wider max-w-[200px] mx-auto leading-normal">
+            Selecciona un caso del listado central para inspeccionar su dossier y archivos DMS.
+          </p>
+        </div>
+      </div>
+      }
+    </div>
+
+  </div>
+  }
+</div>

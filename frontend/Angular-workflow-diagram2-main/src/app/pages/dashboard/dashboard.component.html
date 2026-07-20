@@ -1,0 +1,74 @@
+<div class="wf-page wf-view wf-dashboard-v2">
+  <section class="mx-4 mt-4 flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-3" aria-label="Rango de fechas del dashboard">
+    <label class="flex flex-col gap-1 text-xs font-bold text-slate-600">
+      Fecha desde
+      <input type="date" [value]="fechaDesde()" (change)="actualizarFechaDesde($any($event.target).value)" class="rounded-lg border border-slate-300 px-3 py-2">
+    </label>
+    <label class="flex flex-col gap-1 text-xs font-bold text-slate-600">
+      Fecha hasta
+      <input type="date" [value]="fechaHasta()" (change)="actualizarFechaHasta($any($event.target).value)" class="rounded-lg border border-slate-300 px-3 py-2">
+    </label>
+    <button type="button" (click)="limpiarRangoFechas()" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700">Limpiar rango</button>
+    <span class="pb-2 text-xs text-slate-500">{{ totalSolicitudes() }} trámites en el rango</span>
+  </section>
+  <app-dashboard-header
+    [role]="authService.currentUser()?.rol || ''"
+    [departamento]="authService.currentUser()?.departamento || ''"
+    [canCreate]="authService.currentUser()?.rol === 'SOLICITANTE'"
+    [totalSolicitudes]="totalSolicitudes()"
+    [slaCritico]="contadoresSla().VENCIDO"
+    [totalUrgentes]="totalUrgentes()"
+    [onlineVisible]="presenciaResumen()?.totalOnlineVisible || 0"
+    [tasaCierre]="tasaCierre()"
+    [solicitudesEnRiesgo]="solicitudesEnRiesgo()"
+    [promedioEventos]="promedioEventos()"
+    [activeView]="activeView()"
+    (viewChanged)="cambiarVista($event)" />
+
+  <div class="wf-dashboard-content">
+    @if (activeView() === 'OPERATIVO') {
+      <app-dashboard-operativo
+        [estadosFlujo]="estadosFlujo"
+        [contadoresEstado]="contadoresEstado()"
+        [filtroEstado]="filtroEstadoTabla()"
+        [stats]="metadata()"
+        [diagramConfig]="diagramConfig()"
+        (estadoToggled)="filtrarEstadoDesdeOperativo($event)"
+        (selectionEnded)="onDiagramSelectionEnded($event)" />
+    } @else {
+      <app-dashboard-registros
+        [solicitudes]="solicitudes()"
+        [searchControl]="searchControl"
+        [estadosFlujo]="estadosFlujo"
+        [estadosSlaFiltro]="estadosSlaFiltro"
+        [estadosSlaVisibles]="estadosSlaVisibles"
+        [filtroEstado]="filtroEstadoTabla()"
+        [filtroSla]="filtroSlaTabla()"
+        [contadoresSla]="contadoresSla()"
+        [registrosCriticos]="registrosCriticos()"
+        [topDepartamentos]="topDepartamentos()"
+        [maxCargaDepartamentos]="maxCargaDepartamentos()"
+        [usuariosOnlineVisibles]="usuariosOnlineVisibles()"
+        [presenciaGeneradoEn]="presenciaResumen()?.generadoEn || null"
+        (buscarRequested)="buscarSolicitudes()"
+        (limpiarBusquedaRequested)="limpiarBusqueda()"
+        (estadoToggled)="aplicarFiltroEstado($event)"
+        (slaToggled)="aplicarFiltroSla($event)"
+        (limpiarFiltrosRequested)="limpiarFiltrosTabla()" />
+    }
+  </div>
+
+  @defer (on idle) {
+    <app-flow-inspector
+      [estadoDetalle]="detalleEstadoSeleccionado()"
+      [transicionDetalle]="detalleTransicionSeleccionada()"
+      [estadoObjetivo]="estadoObjetivoSeleccionado()"
+      [hasCaseTarget]="!!solicitudObjetivoSeleccionada()"
+      [contadores]="contadoresEstado()"
+      (reset)="limpiarSeleccionDiagrama()"
+      (enterFlow)="entrarAlEstadoDesdeSeleccion()"
+      (openCase)="abrirSolicitudObjetivoSeleccionada()" />
+  } @placeholder {
+    <div class="wf-defer-placeholder wf-defer-placeholder--compact">Preparando inspector...</div>
+  }
+</div>

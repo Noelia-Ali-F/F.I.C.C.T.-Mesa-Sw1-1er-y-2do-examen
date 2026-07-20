@@ -1,0 +1,218 @@
+<div class="mx-auto flex w-full max-w-7xl min-h-[75vh] flex-col overflow-hidden bg-white border border-slate-200/85 rounded-3xl shadow-xl lg:h-[calc(100vh-8rem)] lg:min-h-0 animate-fade-in">
+  
+  <!-- Premium Integration Header -->
+  <div class="flex flex-col gap-4 border-b border-slate-200/80 bg-white p-4.5 sm:p-5 sm:flex-row sm:items-center sm:justify-between shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="h-10 w-10 bg-teal-50 border border-teal-150 text-teal-700 flex items-center justify-center shadow-sm rounded-2xl transition-transform hover:scale-105 duration-300">
+        <mat-icon fontSet="material-symbols-rounded" class="!text-xl">smart_toy</mat-icon>
+      </div>
+      <div class="text-left">
+        <div class="flex items-center gap-2">
+          <h2 class="font-black text-slate-800 text-sm tracking-tight">Copiloto Inteligente IA</h2>
+          <span class="text-[8px] font-black bg-teal-50 border border-teal-150 text-teal-700 px-2 py-0.5 rounded-md uppercase tracking-wider">v3.0</span>
+        </div>
+        
+        <!-- Status indicator with pulsing glow -->
+        <div class="flex items-center gap-1.5 mt-0.5">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <p class="text-[8.5px] font-bold text-slate-400 uppercase tracking-widest">
+            SISTEMA ACTIVO • {{ user()?.rol }} EN {{ user()?.departamento || 'OPERACIONES' }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Software Quick Navigation / Quick Links bar -->
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest mr-1 hidden md:inline">Accesos Directos del Software:</span>
+      
+      <button (click)="navigateTo('/solicitudes')" 
+              class="flex items-center gap-1.5 px-3 py-2 bg-slate-50 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/60 rounded-xl text-[10px] font-extrabold text-slate-600 transition-all cursor-pointer shadow-sm">
+        <mat-icon fontSet="material-symbols-rounded" class="!text-sm text-slate-500">inbox</mat-icon>
+        <span>Bandeja</span>
+      </button>
+
+      <button (click)="navigateTo('/mapa-avanzado')" 
+              class="flex items-center gap-1.5 px-3 py-2 bg-slate-50 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/60 rounded-xl text-[10px] font-extrabold text-slate-600 transition-all cursor-pointer shadow-sm">
+        <mat-icon fontSet="material-symbols-rounded" class="!text-sm text-slate-500">hub</mat-icon>
+        <span>Mapa</span>
+      </button>
+
+      @if (user()?.rol === 'ADMINISTRADOR') {
+        <button (click)="navigateTo('/bpmn-workspace')" 
+                class="flex items-center gap-1.5 px-3 py-2 bg-slate-50 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/60 rounded-xl text-[10px] font-extrabold text-slate-600 transition-all cursor-pointer shadow-sm">
+          <mat-icon fontSet="material-symbols-rounded" class="!text-sm text-slate-500">account_tree</mat-icon>
+          <span>Editor BPMN</span>
+        </button>
+      }
+
+      <button (click)="navigateTo('/documentos')" 
+              class="flex items-center gap-1.5 px-3 py-2 bg-slate-50 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/60 rounded-xl text-[10px] font-extrabold text-slate-600 transition-all cursor-pointer shadow-sm">
+        <mat-icon fontSet="material-symbols-rounded" class="!text-sm text-slate-500">description</mat-icon>
+        <span>Documentos</span>
+      </button>
+
+      @if (user()?.rol === 'SOLICITANTE' || user()?.rol === 'ADMINISTRADOR') {
+        <button (click)="navigateTo('/crear')" 
+                class="flex items-center gap-1.5 px-3.5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-[10px] font-extrabold transition-all cursor-pointer shadow-md shadow-teal-600/10 border-none">
+          <mat-icon fontSet="material-symbols-rounded" class="!text-sm text-teal-100">add_circle</mat-icon>
+          <span>Crear Solicitud</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Main Chat Workspace -->
+  <div class="relative flex min-h-0 flex-1 flex-col bg-slate-50/20">
+    
+    <!-- Messages Scroll Canvas -->
+    <div #scrollContainer class="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6" id="scrollContainer">
+      
+      @for (msg of messages(); track msg) {
+        <div class="flex w-full group" [ngClass]="{'justify-end': !msg.isAi, 'justify-start': msg.isAi}">
+          
+          <div class="flex gap-2.5 max-w-[90%] sm:max-w-[85%] lg:max-w-[78%]">
+            
+            <!-- AI Avatar representation -->
+            @if (msg.isAi) {
+              <div class="h-8 w-8 bg-teal-500 text-white rounded-xl flex items-center justify-center shadow-sm shrink-0 self-end mb-1">
+                <mat-icon fontSet="material-symbols-rounded" class="!text-sm">smart_toy</mat-icon>
+              </div>
+            }
+
+            <div class="relative p-4 text-[11.5px] transition-all duration-300 shadow-sm border rounded-2xl text-left"
+                 [ngClass]="{
+                   'bg-teal-600 border-teal-600 text-white rounded-br-none': !msg.isAi,
+                   'bg-white border-slate-200/80 text-slate-800 rounded-bl-none': msg.isAi && msg.kind === 'normal',
+                   'bg-rose-50 text-rose-900 border-rose-200 rounded-bl-none': msg.isAi && msg.kind === 'error',
+                   'bg-emerald-50 text-emerald-900 border-emerald-200 rounded-bl-none': msg.isAi && msg.kind === 'success',
+                   'bg-amber-50 text-amber-900 border-amber-200 rounded-bl-none': msg.isAi && msg.kind === 'warning'
+                 }">
+              
+              <!-- Floating Bubble Header tag -->
+              <div class="text-[8px] font-black uppercase tracking-widest mb-1.5 opacity-65 flex items-center gap-1">
+                @if (msg.isAi) {
+                  <mat-icon fontSet="material-symbols-rounded" class="!text-[10px] shrink-0">memory</mat-icon>
+                  <span>COPILOTO IA • {{ msg.intent || 'CONVERSACIÓN' }}</span>
+                } @else {
+                  <mat-icon fontSet="material-symbols-rounded" class="!text-[10px] shrink-0">person</mat-icon>
+                  <span>TÚ</span>
+                }
+              </div>
+
+              <!-- Text Content -->
+              <div class="whitespace-pre-wrap leading-relaxed" [innerHTML]="msg.safeHtml || msg.text"></div>
+              
+              <!-- Time tag -->
+              <div class="text-[7.5px] font-semibold mt-2 opacity-50 text-right">
+                {{ msg.time | date:'HH:mm:ss' }}
+              </div>
+            </div>
+            
+            <!-- User Avatar representation -->
+            @if (!msg.isAi) {
+              <div class="h-8 w-8 bg-slate-100 border border-slate-200 text-slate-600 rounded-xl flex items-center justify-center shadow-sm shrink-0 self-end mb-1">
+                <mat-icon fontSet="material-symbols-rounded" class="!text-sm">person</mat-icon>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Pending Action Confirmation Banner -->
+      @if (pendingActionSummary()) {
+        <div class="flex w-full justify-center py-2">
+          <div class="relative w-full max-w-lg border border-amber-200 bg-amber-50/50 p-5 rounded-2xl shadow-sm text-left">
+            <div class="flex gap-3 mb-4">
+              <div class="h-8 w-8 bg-amber-100 border border-amber-200 text-amber-800 rounded-xl flex items-center justify-center shrink-0">
+                <mat-icon fontSet="material-symbols-rounded" class="!text-base">warning</mat-icon>
+              </div>
+              <div>
+                <h4 class="text-[9px] font-black text-amber-800 uppercase tracking-widest">Confirmación Requerida</h4>
+                <p class="text-[11px] text-amber-700/95 leading-relaxed mt-1 font-semibold">{{ pendingActionSummary() }}</p>
+              </div>
+            </div>
+            
+            <div class="flex gap-2.5">
+              <button (click)="confirmarAccionPendiente()" [disabled]="isLoading()"
+                      class="flex-1 flex items-center justify-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white p-2.5 text-[10px] font-bold rounded-xl transition cursor-pointer disabled:opacity-50 shadow-sm border-none">
+                <mat-icon fontSet="material-symbols-rounded" class="!text-sm">check</mat-icon>
+                <span>Confirmar ejecución</span>
+              </button>
+              <button (click)="cancelarAccionPendiente()" [disabled]="isLoading()"
+                      class="flex-1 flex items-center justify-center gap-1 bg-white hover:bg-rose-50 border border-slate-200 text-rose-600 p-2.5 text-[10px] font-bold rounded-xl transition cursor-pointer disabled:opacity-50">
+                <mat-icon fontSet="material-symbols-rounded" class="!text-sm">close</mat-icon>
+                <span>Abortar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Loading / Thinking bubble -->
+      @if (isLoading() && !pendingActionSummary()) {
+        <div class="flex justify-start gap-2.5">
+          <div class="h-8 w-8 bg-teal-500 text-white rounded-xl flex items-center justify-center shadow-sm shrink-0 self-end">
+            <mat-icon fontSet="material-symbols-rounded" class="!text-sm">smart_toy</mat-icon>
+          </div>
+          <div class="bg-white border border-slate-200/80 p-3.5 rounded-2xl rounded-bl-none shadow-sm flex items-center gap-3">
+            <div class="flex gap-1.5">
+              <span class="w-1.5 h-1.5 bg-teal-500 rounded-full animate-bounce"></span>
+              <span class="w-1.5 h-1.5 bg-teal-500 rounded-full animate-bounce [animation-delay:0.15s]"></span>
+              <span class="w-1.5 h-1.5 bg-teal-500 rounded-full animate-bounce [animation-delay:0.3s]"></span>
+            </div>
+            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+              Copiloto procesando...
+            </span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Input text control area -->
+    <div class="border-t border-slate-200/80 bg-white p-4 lg:p-5 shrink-0">
+      <div class="mx-auto max-w-4xl flex items-stretch gap-3">
+        
+        <!-- Microphone Button (Dictación por Voz) -->
+        <button
+          (click)="toggleVoice()"
+          [disabled]="isLoading() || !!pendingActionSummary()"
+          [ngClass]="{
+            'bg-rose-600 text-white animate-pulse border-rose-500 shadow-lg shadow-rose-500/20': voiceService.isListening(),
+            'bg-slate-50 hover:bg-slate-100 text-slate-550 border-slate-200': !voiceService.isListening()
+          }"
+          class="h-11 w-11 rounded-2xl border flex items-center justify-center transition-all cursor-pointer shrink-0 shadow-sm"
+          [attr.title]="voiceService.isListening() ? 'Detener dictado por voz' : 'Dictar mensaje por voz'"
+        >
+          <mat-icon fontSet="material-symbols-rounded" class="!text-base">
+            {{ voiceService.isListening() ? 'mic' : 'mic_none' }}
+          </mat-icon>
+        </button>
+
+        <div class="relative flex-1">
+          <input type="text"
+                 id="ai_input"
+                 [ngModel]="currentMessage()"
+                 (ngModelChange)="currentMessage.set($event)"
+                 (keyup.enter)="sendMessage()"
+                 [disabled]="isLoading() || !!pendingActionSummary()"
+                 placeholder="Pregúntale al Asistente IA sobre expedientes, estados de tareas, análisis de cuellos de botella o dictale directamente..."
+                 class="w-full bg-slate-50 border border-slate-200/80 py-3.5 pl-4 pr-12 text-xs font-semibold rounded-2xl outline-none focus:border-teal-500/60 focus:bg-white focus:ring-4 focus:ring-teal-500/10 transition-all disabled:opacity-50" />
+          
+          <button
+            (click)="sendMessage()"
+            [disabled]="isLoading() || !!pendingActionSummary() || !currentMessage().trim()"
+            class="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 bg-teal-600 hover:bg-teal-700 disabled:bg-slate-200 disabled:opacity-40 text-white rounded-xl flex items-center justify-center shadow transition-all cursor-pointer border-none"
+            title="Enviar mensaje"
+          >
+            <mat-icon fontSet="material-symbols-rounded" class="!text-base">send</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

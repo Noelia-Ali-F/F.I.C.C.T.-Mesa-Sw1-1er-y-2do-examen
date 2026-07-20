@@ -1,0 +1,238 @@
+<div class="wf-page wf-view-body wf-animate-in">
+
+  <!-- Unified Page Header -->
+  <app-page-header
+    title="Panel de Usuarios"
+    subtitle="Gestión de Credenciales, Permisos y Roles de Acceso"
+    eyebrow="Seguridad Central"
+    icon="manage_accounts"
+    gradientClasses="from-amber-500 via-emerald-400 to-teal-500"
+  >
+    <button (click)="abrirModalCrear()" class="flex items-center gap-1.5 px-5 py-2.5 text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white rounded-xl shadow-sm hover:shadow transition-all duration-200 cursor-pointer">
+      <svg class="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+      Crear Usuario
+    </button>
+  </app-page-header>
+
+  <div class="mt-6"></div>
+
+  <div class="grid grid-cols-1 gap-8">
+    @if (showModal()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+      <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" (click)="cancelarEdicion()"></div>
+      
+      <!-- Form Card -->
+      <div class="wf-card w-full max-w-md p-6 relative z-10 wf-animate-scale shadow-2xl bg-white max-h-[90vh] overflow-y-auto">
+        <div class="wf-section-header">
+          <div class="wf-section-icon" [style.background]="enModoEdicion() ? 'linear-gradient(135deg, #0d9488, #f59e0b)' : 'var(--wf-gradient-primary)'">
+            {{ enModoEdicion() ? 'ED' : 'NU' }}
+          </div>
+          <h3 class="wf-section-title flex-1">
+            @if (enModoEdicion()) {
+              Editar usuario
+            } @else {
+              Crear usuario
+            }
+          </h3>
+          <button type="button" (click)="cancelarEdicion()" class="text-slate-400 hover:text-slate-600 p-1">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+      <form [formGroup]="form" (ngSubmit)="guardarUsuario()" class="flex flex-col gap-5">
+        
+        @if (enModoEdicion()) {
+          <div class="flex flex-col items-center gap-3 border-b border-slate-100 pb-5 mb-1">
+            <div class="relative group">
+              <div class="h-20 w-20 rounded-2xl border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden shadow-sm">
+                @if (getValidAvatar(usuarios().find(u => u.id === editingUserId())?.avatarUrl); as url) {
+                  <img [src]="url.startsWith('http') || url.startsWith('/icons/') ? url : basePath + url" class="h-full w-full object-cover" alt="Avatar">
+                }
+              </div>
+
+              <button 
+                type="button"
+                (click)="fileInput.click()"
+                class="absolute inset-0 rounded-2xl bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold cursor-pointer"
+              >
+                Cambiar
+              </button>
+            </div>
+            <input #fileInput type="file" class="hidden" (change)="onFileSelected($event)" accept="image/*">
+            <span class="text-xs text-slate-400 font-medium">Foto de perfil</span>
+          </div>
+        }
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-semibold text-slate-600">Nombre de usuario</label>
+          <input
+            type="text"
+            formControlName="username"
+            [readonly]="enModoEdicion()"
+            class="wf-input"
+            placeholder="usuario.sistema"
+          />
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-semibold text-slate-600">Contraseña</label>
+          <input
+            type="text"
+            formControlName="password"
+            class="wf-input"
+            [placeholder]="enModoEdicion() ? 'Dejar vacío = sin cambio' : 'Contraseña temporal'"
+          />
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-semibold text-slate-600">Nombre completo</label>
+          <input
+            type="text"
+            formControlName="nombreCompleto"
+            class="wf-input"
+            placeholder="Nombre completo"
+          />
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-semibold text-slate-600">Rol</label>
+            <select
+              formControlName="rol"
+              class="wf-input appearance-none text-sm font-medium"
+            >
+              @for (rol of roles; track rol) {
+                <option [value]="rol">{{ rol }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-semibold text-slate-600">Departamento</label>
+            <select
+              formControlName="departamento"
+              [disabled]="form.controls.rol.value === 'ADMINISTRADOR'"
+              class="wf-input appearance-none text-sm font-medium disabled:opacity-50"
+            >
+              @if (form.controls.rol.value === 'ADMINISTRADOR') {
+                <option value="">N/A</option>
+              } @else {
+                @for (departamento of departamentosCatalogo(); track departamento) {
+                  <option [value]="departamento">{{ departamento }}</option>
+                }
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 pt-2">
+          <button
+            type="submit"
+            [disabled]="form.invalid || isSaving()"
+            class="wf-btn-primary flex-1"
+            [style.background]="enModoEdicion() ? 'linear-gradient(135deg, #0d9488, #f59e0b)' : ''"
+          >
+            @if (isSaving()) {
+              <span class="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              Procesando...
+            } @else if (enModoEdicion()) {
+              Actualizar usuario
+            } @else {
+              Crear usuario
+            }
+          </button>
+
+          @if (enModoEdicion()) {
+            <button
+              type="button"
+              (click)="cancelarEdicion()"
+              class="wf-btn-secondary"
+            >
+              Cancelar
+            </button>
+          }
+        </div>
+      </form>
+    </div>
+    </div>
+    }
+
+    <!-- Users Table -->
+    <app-page-section
+      title="Registro de Usuarios"
+      [badgeText]="usuarios().length + ' usuarios'"
+      icon="people"
+    >
+      @if (mensajeExito()) {
+        <div class="px-5 py-3 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-100/50 rounded-xl mb-4 flex items-center gap-2">
+          <span class="font-semibold uppercase tracking-wide">Exito:</span> {{ mensajeExito() }}
+        </div>
+      }
+
+      @if (mensajeError()) {
+        <div class="px-5 py-3 text-sm font-medium text-red-700 bg-red-50 border border-red-100/50 rounded-xl mb-4 flex items-center gap-2">
+          <span class="font-semibold uppercase tracking-wide">Error:</span> {{ mensajeError() }}
+        </div>
+      }
+
+      @if (isLoading()) {
+        <div class="p-12 text-center">
+          <span class="h-6 w-6 border-2 border-teal-200 border-t-teal-600 rounded-full animate-spin inline-block"></span>
+          <p class="text-sm text-slate-400 mt-3">Cargando usuarios...</p>
+        </div>
+      } @else {
+        <div class="hidden lg:grid grid-cols-[1.2fr_1.2fr_0.8fr_0.8fr_1fr] wf-table-header">
+          <div>Usuario</div>
+          <div>Nombre</div>
+          <div>Rol</div>
+          <div>Departamento</div>
+          <div class="text-right">Acciones</div>
+        </div>
+
+        <div class="max-h-[560px] overflow-auto">
+          @for (usuario of usuarios(); track usuario.id) {
+            <div class="grid grid-cols-1 lg:grid-cols-[1.2fr_1.2fr_0.8fr_0.8fr_1fr] items-center wf-table-row text-sm">
+              <div class="font-medium text-slate-900 flex items-center gap-2.5">
+                <div class="h-8 w-8 rounded-lg border border-slate-200 bg-slate-50 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                  @if (getValidAvatar(usuario.avatarUrl); as url) {
+                    <img [src]="url.startsWith('http') || url.startsWith('/icons/') ? url : basePath + url" class="h-full w-full object-cover">
+                  }
+                </div>
+                {{ usuario.username }}
+              </div>
+              <div class="text-slate-600">{{ usuario.nombreCompleto }}</div>
+              <div>
+                <span class="wf-badge"
+                  [class.wf-badge-teal]="usuario.rol === 'ADMINISTRADOR'"
+                  [class.wf-badge-blue]="usuario.rol === 'REVISOR'"
+                  [class.wf-badge-slate]="usuario.rol === 'SOLICITANTE'"
+                >{{ usuario.rol }}</span>
+              </div>
+              <div class="text-xs text-slate-500">{{ usuario.departamento || 'N/A' }}</div>
+              <div class="flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  (click)="iniciarEdicion(usuario)"
+                  class="wf-btn-secondary text-xs px-3 py-1.5"
+                >
+                  Editar
+                </button>
+                <button
+                  type="button"
+                  (click)="eliminarUsuario(usuario)"
+                  class="text-xs px-3 py-1.5 rounded-lg border border-red-200 bg-white text-red-600 font-semibold hover:bg-red-50 transition-all"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          } @empty {
+            <div class="p-12 text-center text-sm text-slate-400">
+              No hay usuarios registrados
+            </div>
+          }
+        </div>
+      }
+    </app-page-section>
+  </div>
+</div>

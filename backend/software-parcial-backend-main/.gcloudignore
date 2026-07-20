@@ -1,0 +1,20 @@
+# Optimizador de subidas de Google Cloud para el Backend (Spring Boot / Maven)
+.git
+.gcloudignore
+
+# Carpetas de Compilación local e IDEs
+target/
+bin/
+.idea/
+.vscode/
+.settings/
+.project
+.classpath
+
+# Logs
+*.log
+logs/
+
+# Archivos temporales de sistema
+.DS_Store
+Thumbs.db

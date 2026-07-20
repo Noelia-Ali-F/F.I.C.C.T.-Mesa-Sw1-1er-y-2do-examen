@@ -1,0 +1,62 @@
+# Secrets and environment
+.env
+.env.*
+!.env.cloud.example
+*.pem
+*.key
+*.keystore
+*.jks
+*.p12
+*.pfx
+
+# IDE / editor
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.history/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs and temp
+*.log
+logs/
+tmp/
+temp/
+
+# Deployment / generated scripts state
+*.pid
+
+# Backend / Java / Maven
+backend/**/target/
+backend/**/uploads/
+backend/**/tmp/
+backend/**/surefire-reports/
+
+# Frontend / Angular / Node
+frontend/**/node_modules/
+frontend/**/dist/
+frontend/**/.angular/
+frontend/**/coverage/
+frontend/**/tmp/
+frontend/**/out-tsc/
+frontend/**/.sass-cache/
+
+# Mobile / Flutter / Android
+movil/**/.dart_tool/
+movil/**/.flutter-plugins
+movil/**/.flutter-plugins-dependencies
+movil/**/.pub/
+movil/**/.pub-cache/
+movil/**/build/
+movil/**/android/app/debug/
+movil/**/android/app/profile/
+movil/**/android/app/release/
+movil/**/android/.gradle/
+
+# Python / shell leftovers
+*.pyc
+*.swp

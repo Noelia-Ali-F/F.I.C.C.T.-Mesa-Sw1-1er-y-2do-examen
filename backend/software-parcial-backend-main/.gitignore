@@ -1,0 +1,45 @@
+# Maven/Java build
+/target/
+**/target/
+*.class
+*.log
+
+# Maven wrapper
+.mvn/timing.properties
+
+# IDE
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env and secrets
+.env
+.env.*
+*.pem
+*.key
+*.keystore
+*.jks
+*.p12
+*.pfx
+
+# Firebase service account keys
+*firebase-adminsdk-*.json
+
+# Local uploads and temp
+/uploads/
+/tmp/
+
+# Logs
+logs/
+
+# Node (if present)
+node_modules/
+
+# Test reports
+surefire-reports/

@@ -1,0 +1,772 @@
+<div class="space-y-6 animate-fade-in pb-12">
+
+  <!-- Unified Page Header -->
+  <app-page-header
+    title="Consola de Inteligencia"
+    subtitle="Métricas persistidas &amp; reportes operativos"
+    eyebrow="Inferencia Predictiva"
+    icon="insights"
+  >
+    <a
+      routerLink="/"
+      class="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 bg-white border border-slate-200/80 rounded-xl shadow-sm hover:shadow transition-all duration-200 cursor-pointer"
+      data-tooltip="Volver al Panel Principal de Control"
+    >
+      <mat-icon fontSet="material-symbols-rounded" class="!text-sm">arrow_back</mat-icon>
+      <span>Volver al Panel</span>
+    </a>
+  </app-page-header>
+
+  @if (cargando()) {
+    <div class="bg-white border border-slate-200/80 rounded-2xl p-16 text-center shadow-sm">
+      <div class="h-8 w-8 border-3 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-widest animate-pulse">Compilando estadísticas operacionales y coeficientes...</p>
+    </div>
+  } @else {
+
+    <!-- Segmented Tab Navigation Control Bar -->
+    <div class="tab-nav-bar">
+      <button 
+        (click)="activeTab.set('predictiva')"
+        [class.is-active]="activeTab() === 'predictiva'"
+        class="tab-nav-btn"
+        data-tooltip="Ver indicadores de carga y SLA por departamento"
+      >
+        <mat-icon fontSet="material-symbols-rounded" class="!text-sm">query_stats</mat-icon>
+        <span>Indicadores operativos</span>
+      </button>
+      
+      <button 
+        (click)="activeTab.set('copiloto')"
+        [class.is-active]="activeTab() === 'copiloto'"
+        class="tab-nav-btn"
+        data-tooltip="Generar y consultar informes corporativos de IA"
+      >
+        <mat-icon fontSet="material-symbols-rounded" class="!text-sm">smart_toy</mat-icon>
+        <span>Dossier & Copiloto IA</span>
+      </button>
+      
+      <button 
+        (click)="activeTab.set('historial')"
+        [class.is-active]="activeTab() === 'historial'"
+        class="tab-nav-btn"
+        data-tooltip="Ver auditoría de expedientes y reportes guardados en BD"
+      >
+        <mat-icon fontSet="material-symbols-rounded" class="!text-sm">database</mat-icon>
+        <span>Auditoría & MongoDB</span>
+      </button>
+    </div>
+
+    <!-- TAB 1: VISION PREDICTIVA TENSORFLOW -->
+    @if (activeTab() === 'predictiva') {
+      <div class="space-y-6 animate-fade-in">
+        
+        <!-- Telemetry Cards & SVG Circular Gauges Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          
+          <!-- Card 1: Volumen total -->
+          <div class="metric-card" data-tooltip="Total de expedientes actualmente registrados en el sistema">
+            <div class="space-y-1">
+              <span class="text-xs font-extrabold uppercase tracking-widest text-slate-400 block">Volumen Total</span>
+              <p class="text-2xl sm:text-3xl font-black text-slate-900 leading-none mt-1">{{ totales() }}</p>
+              <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block pt-1">Expedientes en tránsito</span>
+            </div>
+            <div class="metric-card-icon-box">
+              <mat-icon fontSet="material-symbols-rounded" class="!text-xl font-bold">folder</mat-icon>
+            </div>
+          </div>
+
+          <!-- Card 2: Tasa de Cierre (SVG Gauge) -->
+          <div class="metric-card" data-tooltip="Porcentaje de solicitudes resueltas satisfactoriamente">
+            <div class="space-y-1">
+              <span class="text-xs font-extrabold uppercase tracking-widest text-slate-400 block">Tasa de Cierre</span>
+              <p class="text-2xl sm:text-3xl font-black text-emerald-600 leading-none mt-1">{{ tasaCierre() }}%</p>
+              <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block pt-1">{{ aprobadas() }} resueltas</span>
+            </div>
+            
+            <div class="relative h-12 w-12 flex items-center justify-center shrink-0">
+              <svg class="w-full h-full transform -rotate-90">
+                <circle cx="24" cy="24" r="20" stroke="#f1f5f9" stroke-width="4" fill="transparent" />
+                <circle cx="24" cy="24" r="20" stroke="#10b981" stroke-width="4" fill="transparent"
+                        [attr.stroke-dasharray]="2 * 3.1415 * 20"
+                        [attr.stroke-dashoffset]="2 * 3.1415 * 20 * (1 - tasaCierre() / 100)" />
+              </svg>
+              <span class="absolute text-xs font-black text-emerald-600">OK</span>
+            </div>
+          </div>
+
+          <!-- Card 3: Tasa de Riesgo (SVG Gauge) -->
+          <div class="metric-card" data-tooltip="Porcentaje de solicitudes con plazos de SLA vencidos">
+            <div class="space-y-1">
+              <span class="text-xs font-extrabold uppercase tracking-widest text-slate-400 block">Tasa de Riesgo</span>
+              <p class="text-2xl sm:text-3xl font-black text-rose-600 leading-none mt-1">{{ tasaRiesgo() }}%</p>
+              <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block pt-1">{{ vencidas() }} fuera de SLA</span>
+            </div>
+
+            <div class="relative h-12 w-12 flex items-center justify-center shrink-0">
+              <svg class="w-full h-full transform -rotate-90">
+                <circle cx="24" cy="24" r="20" stroke="#f1f5f9" stroke-width="4" fill="transparent" />
+                <circle cx="24" cy="24" r="20" stroke="#f43f5e" stroke-width="4" fill="transparent"
+                        [attr.stroke-dasharray]="2 * 3.1415 * 20"
+                        [attr.stroke-dashoffset]="2 * 3.1415 * 20 * (1 - tasaRiesgo() / 100)" />
+              </svg>
+              <span class="absolute text-xs font-black text-rose-600">!!</span>
+            </div>
+          </div>
+
+          <!-- Card 4: En revisión activa -->
+          <div class="metric-card" data-tooltip="Solicitudes que se encuentran actualmente bajo dictamen o revisión de etapas">
+            <div class="space-y-1">
+              <span class="text-xs font-extrabold uppercase tracking-widest text-slate-400 block">En Revisión</span>
+              <p class="text-2xl sm:text-3xl font-black text-blue-600 leading-none mt-1">{{ enRevision() }}</p>
+              <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block pt-1">Bajo dictamen</span>
+            </div>
+            <div class="metric-card-icon-box active-review">
+              <mat-icon fontSet="material-symbols-rounded" class="!text-xl font-bold">rate_review</mat-icon>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- TENSORFLOW BRAIN DIAGNOSTIC DASHBOARD -->
+        <div class="bg-slate-50/50 border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-sm space-y-6 relative overflow-hidden">
+          <!-- Glow decoration -->
+          <div class="absolute -right-24 -top-24 h-48 w-48 rounded-full bg-teal-400/5 blur-3xl"></div>
+          
+          <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-slate-200/60 pb-4">
+            <div class="flex items-center gap-3">
+              <div class="h-10 w-10 bg-teal-50 border border-teal-100 rounded-xl text-teal-700 flex items-center justify-center shrink-0">
+                <mat-icon fontSet="material-symbols-rounded" class="!text-xl font-bold">query_stats</mat-icon>
+              </div>
+              <div>
+                <h3 class="text-sm sm:text-base font-black text-slate-800 tracking-tight">Análisis de carga y SLA</h3>
+                <p class="text-xs sm:text-sm font-semibold text-slate-500 tracking-wide mt-1">Cálculo determinista con solicitudes persistidas por departamento</p>
+              </div>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto">
+              @if (tfTraining()) {
+                <div class="w-full sm:w-auto bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2 text-xs font-extrabold rounded-xl uppercase tracking-wider flex items-center justify-center gap-2">
+                  <span class="h-3 w-3 border-2 border-amber-600 border-t-transparent rounded-full animate-spin"></span>
+                  <span>Recalculando indicadores...</span>
+                </div>
+              } @else {
+                <button
+                  (click)="ejecutarEntrenamientoTensorFlow()"
+                  class="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-xl shadow-sm hover:shadow transition duration-200 cursor-pointer text-center"
+                  data-tooltip="Recalcular con los registros actualmente persistidos"
+                >
+                  <mat-icon fontSet="material-symbols-rounded" class="!text-sm font-bold">play_arrow</mat-icon>
+                  <span>Recalcular indicadores</span>
+                </button>
+                @if (tfModelTrained()) {
+                  <button
+                    (click)="resetTensorFlow()"
+                    class="flex-1 sm:flex-initial px-4 py-2.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 text-xs font-bold rounded-xl transition cursor-pointer text-center"
+                    data-tooltip="Restaurar coeficientes iniciales sin entrenar"
+                  >
+                    Resetear
+                  </button>
+                }
+              }
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+            
+            <!-- Left Grid: Operational Parameters & Simulator Control -->
+            <div class="lg:col-span-4 space-y-6">
+              
+              <!-- Parameters Card -->
+              <div class="dashboard-card">
+                <div class="space-y-4">
+                  <h4 class="text-sm font-extrabold uppercase text-slate-500 tracking-wider pb-2 border-b border-slate-100">Parámetros Operacionales</h4>
+                  <div class="space-y-2.5 text-xs sm:text-sm text-slate-600 leading-relaxed font-semibold">
+                    <p>• <b>Variables en foco:</b> Densidad de solicitudes inactivas, peso de prioridad y SLA.</p>
+                    <p>• <b>Método:</b> ponderación explícita de carga activa, prioridad y vencimiento SLA.</p>
+                  </div>
+                </div>
+
+                <div class="border-t border-slate-100 pt-4 space-y-3 mt-4">
+                  <div class="flex justify-between text-xs sm:text-sm font-bold">
+                    <span class="text-slate-400">Estado del cálculo:</span>
+                    <span class="uppercase tracking-wide" [class.text-amber-600]="tfTraining()" [class.text-teal-600]="tfModelTrained()" [class.text-slate-400]="!tfTraining() && !tfModelTrained()">
+                      {{ tfTraining() ? 'Calculando...' : tfModelTrained() ? 'Actualizado' : 'Pendiente' }}
+                    </span>
+                  </div>
+                  <div class="flex justify-between text-xs sm:text-sm font-bold">
+                    <span class="text-slate-400">Registros analizados:</span>
+                    <span class="text-slate-800">{{ tfModelTrained() ? solicitudes().length : 'Pendiente' }}</span>
+                  </div>
+                  
+                  @if (tfModelTrained()) {
+                    <div class="p-3 bg-teal-50 border border-teal-100 text-teal-800 text-xs sm:text-sm font-bold rounded-xl leading-normal uppercase text-center tracking-wide">
+                      Indicadores actualizados
+                    </div>
+                  } @else {
+                    <div class="p-3 bg-slate-50 border border-slate-200/50 text-slate-400 text-xs sm:text-sm font-medium rounded-xl leading-normal text-center">
+                      Pulse recalcular para actualizar los indicadores
+                    </div>
+                  }
+                </div>
+              </div>
+              
+              <!-- Interactive Traffic Stress Simulator Widget -->
+              <div class="dashboard-card space-y-3">
+                <h5 class="text-xs sm:text-sm font-extrabold uppercase text-slate-500 tracking-wider">Trazabilidad del indicador</h5>
+                <p class="text-xs sm:text-sm text-slate-500 leading-relaxed font-semibold">
+                  El porcentaje combina únicamente carga activa, prioridad y solicitudes vencidas del departamento. No utiliza proyecciones ni datos simulados.
+                </p>
+              </div>
+
+            </div>
+
+            <!-- Right Grid: Live Bottleneck Evaluation & Priorities -->
+            <div class="lg:col-span-8 space-y-6">
+              
+              <!-- Risks evaluated by department -->
+              <div class="space-y-3">
+                <h4 class="text-xs sm:text-sm font-extrabold uppercase text-slate-500 tracking-wider px-1">Indicadores de saturación por departamento</h4>
+                
+                @if (tfPredictions().length > 0) {
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    @for (p of tfPredictions(); track p.depto) {
+                      <div class="risk-card" data-tooltip="Índice de saturación proyectado para esta área operativa">
+                        <div class="flex justify-between items-center border-b border-slate-50 pb-2">
+                          <span class="font-black text-slate-800 text-xs sm:text-sm tracking-tight uppercase truncate mr-2" [title]="p.depto">{{ p.depto }}</span>
+                          <span
+                            class="px-2 py-0.5 text-[10px] sm:text-xs font-extrabold rounded-full border tracking-wide uppercase shrink-0"
+                            [class]="p.status === 'Alto'
+                              ? 'bg-rose-50 border-rose-100 text-rose-700'
+                              : p.status === 'Moderado'
+                                ? 'bg-amber-50 border-amber-100 text-amber-700'
+                                : 'bg-teal-50 border-teal-100 text-teal-700'"
+                          >
+                            {{ p.status }}
+                          </span>
+                        </div>
+
+                        <div class="space-y-2">
+                          <div class="flex justify-between text-xs sm:text-sm font-bold text-slate-500">
+                            <span>Riesgo de Saturación</span>
+                            <span class="font-extrabold text-slate-800 text-xs sm:text-sm">{{ p.risk }}%</span>
+                          </div>
+                          <!-- Progress bar slider -->
+                          <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden relative">
+                            <div
+                              class="h-full rounded-full transition-all duration-550"
+                              [class]="p.status === 'Alto'
+                                ? 'bg-rose-500'
+                                : p.status === 'Moderado'
+                                  ? 'bg-amber-500'
+                                  : 'bg-teal-500'"
+                              [style.width.%]="p.risk"
+                            ></div>
+                          </div>
+
+                          <div class="flex flex-wrap justify-between gap-x-2 gap-y-1 text-[10px] sm:text-xs font-bold uppercase text-slate-500 pt-1.5 border-t border-slate-100 mt-1">
+                            <span>Carga activa: {{ p.activeCount }} trámites</span>
+                            <span>Índice ponderado: {{ p.delayFactor }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div class="bg-white border border-dashed border-slate-200 p-8 sm:p-16 text-center text-slate-400 rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm">
+                    <mat-icon fontSet="material-symbols-rounded" class="!text-3xl text-slate-300">analytics</mat-icon>
+                    <p class="text-xs sm:text-sm font-bold uppercase tracking-wider">No hay expedientes en tránsito para calcular indicadores</p>
+                  </div>
+                }
+              </div>
+              
+              <!-- Priority Allocation gauges -->
+              <div class="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
+                <div class="border-b border-slate-100 pb-2 flex justify-between items-center">
+                  <h3 class="text-xs sm:text-sm font-black uppercase text-slate-800 tracking-tight">Distribución por Prioridades (Carga Global)</h3>
+                  <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Estado</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <!-- URGENTE -->
+                  <div class="space-y-1.5 p-2.5 sm:p-3 bg-slate-50/50 border border-slate-100 rounded-xl" data-tooltip="Prioridad máxima con atención requerida en 24h">
+                    <div class="flex justify-between text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">
+                      <span class="text-rose-600">Urgente</span>
+                      <span class="text-slate-700">{{ urgentes() }} / {{ totales() }}</span>
+                    </div>
+                    <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden relative">
+                      <div class="h-full bg-rose-500 rounded-full" [style.width.%]="totales() > 0 ? (urgentes() / totales() * 100) : 0"></div>
+                    </div>
+                  </div>
+
+                  <!-- ALTA -->
+                  <div class="space-y-1.5 p-2.5 sm:p-3 bg-slate-50/50 border border-slate-100 rounded-xl" data-tooltip="Prioridad alta con atención preferente">
+                    <div class="flex justify-between text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">
+                      <span class="text-amber-600">Alta</span>
+                      <span class="text-slate-700">{{ altas() }} / {{ totales() }}</span>
+                    </div>
+                    <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden relative">
+                      <div class="h-full bg-amber-400 rounded-full" [style.width.%]="totales() > 0 ? (altas() / totales() * 100) : 0"></div>
+                    </div>
+                  </div>
+
+                  <!-- MEDIA -->
+                  <div class="space-y-1.5 p-2.5 sm:p-3 bg-slate-50/50 border border-slate-100 rounded-xl" data-tooltip="Prioridad ordinaria regulada por cola de llegada">
+                    <div class="flex justify-between text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">
+                      <span class="text-sky-600">Media</span>
+                      <span class="text-slate-700">{{ medias() }} / {{ totales() }}</span>
+                    </div>
+                    <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden relative">
+                      <div class="h-full bg-sky-400 rounded-full" [style.width.%]="totales() > 0 ? (medias() / totales() * 100) : 0"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- TAB 2: DOSSIER & AI COPILOT REPORTING WORKSPACE -->
+    @if (activeTab() === 'copiloto') {
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in">
+        
+        <!-- EXECUTIVE AI REPORT PORTAL SHEET (7 Cols) -->
+        <div class="lg:col-span-7 space-y-6">
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-sm space-y-4">
+            <div class="border-b border-slate-100 pb-3 flex justify-between items-center">
+              <div class="flex items-center gap-2">
+                <mat-icon fontSet="material-symbols-rounded" class="text-teal-600">article</mat-icon>
+                <h3 class="text-sm font-black uppercase text-slate-800 tracking-wider font-sans">Dossier Analítico Inteligente</h3>
+              </div>
+              <span class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest shrink-0">Motor analítico local</span>
+            </div>
+
+            @if (aiReportLoading()) {
+              <div class="p-8 sm:p-16 text-center space-y-3">
+                <div class="h-8 w-8 border-3 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest animate-pulse">Auditando solicitudes operativas y compilando dossier ejecutivo...</p>
+              </div>
+            } @else if (aiReportContent()) {
+              <!-- Beautiful Digital Premium Letterhead -->
+              <div class="bg-[#fafbfb] border border-slate-200 p-4 sm:p-6 rounded-2xl shadow-inner text-xs text-black leading-relaxed max-h-[480px] overflow-y-auto space-y-4 relative border-t-4 border-t-black font-sans">
+                <!-- Hologram Watermark seal -->
+                <div class="absolute right-4 top-4 h-14 w-14 rounded-full border border-slate-200 bg-slate-50 flex items-center justify-center opacity-30 select-none pointer-events-none">
+                  <span class="text-[7px] font-mono font-bold text-black uppercase tracking-wider text-center leading-none">STARK<br>AUDIT</span>
+                </div>
+                
+                <div class="flex flex-wrap gap-2 justify-between text-[10px] sm:text-xs font-bold text-black border-b border-slate-200 pb-2 mb-4 uppercase tracking-wider">
+                  <span>Dossier Ref: OPER-IA-{{ totales() }}</span>
+                  <span>EMITIDO: {{ fechaActual | date:'dd/MM/yyyy' }}</span>
+                </div>
+                <div [innerHTML]="aiReportContent()" class="report-content-container prose prose-slate max-w-none text-black leading-relaxed text-sm font-medium space-y-2.5"></div>
+              </div>
+
+              <div class="flex flex-wrap gap-2 pt-2 border-t border-slate-100 mt-2">
+                <button
+                  (click)="generarReporteIA()"
+                  class="flex-1 sm:flex-initial px-4 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-800 text-xs font-bold rounded-xl transition cursor-pointer text-center"
+                  data-tooltip="Volver a auditar las solicitudes y regenerar el informe"
+                >
+                  Volver a Generar
+                </button>
+                <button
+                  (click)="descargarReportePDF()"
+                  class="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-sm text-center"
+                  data-tooltip="Exportar este dossier a un PDF de diseño premium"
+                >
+                  <mat-icon fontSet="material-symbols-rounded" class="!text-sm">picture_as_pdf</mat-icon>
+                  <span>Exportar a PDF</span>
+                </button>
+                <button
+                  (click)="guardarReporteEnBD()"
+                  class="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 text-xs font-bold rounded-xl transition cursor-pointer shadow-sm text-center"
+                  data-tooltip="Persistir este reporte en la base de datos histórica de MongoDB"
+                >
+                  <mat-icon fontSet="material-symbols-rounded" class="!text-sm">save</mat-icon>
+                  <span>Guardar Historial</span>
+                </button>
+              </div>
+            } @else {
+              <div class="border border-dashed border-slate-250 bg-slate-50/50 p-8 sm:p-16 text-center space-y-5 rounded-2xl flex flex-col items-center justify-center">
+                <p class="text-xs sm:text-sm font-semibold text-slate-500 max-w-md leading-relaxed">
+                  Genera un informe con los conteos, prioridades y estados SLA actualmente persistidos. Si el proveedor de IA no está configurado, se informará explícitamente.
+                </p>
+                <button
+                  (click)="generarReporteIA()"
+                  class="w-full sm:w-auto flex items-center justify-center gap-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs sm:text-sm py-3 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer text-center"
+                  data-tooltip="Escanear e interpretar todos los expedientes del sistema"
+                >
+                  <mat-icon fontSet="material-symbols-rounded" class="!text-base">smart_toy</mat-icon>
+                  <span>Generar Dossier Ejecutivo</span>
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- ANALYTICAL CHAT CONSOLE & SLA GAUGES (5 Cols) -->
+        <div class="lg:col-span-5 space-y-6">
+          
+          <!-- Futuristic Chat Interrogator with Suggestions -->
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col h-[480px]">
+            <div class="border-b border-slate-100 pb-3 mb-3 flex justify-between items-center">
+              <h3 class="text-xs sm:text-sm font-black uppercase text-slate-800 tracking-wider flex items-center gap-1.5" data-tooltip="Consultor inteligente integrado para responder dudas del negocio">
+                <span class="w-2 h-2 rounded-full bg-teal-500 animate-ping"></span>
+                Consultor de Dossier IA
+              </h3>
+              <span class="text-[10px] sm:text-xs font-extrabold text-teal-700 bg-teal-50 border border-teal-100 px-2.5 py-0.5 rounded-full uppercase tracking-wider">Activo</span>
+            </div>
+
+            <!-- Chat bubble logs area -->
+            <div class="flex-1 overflow-y-auto space-y-3.5 pr-1 mb-3 text-xs">
+              @if (aiChatHistory().length === 0) {
+                <div class="h-full flex flex-col items-center justify-center text-center p-4 sm:p-6 text-slate-400 space-y-2">
+                  <mat-icon class="!text-3xl text-slate-300" fontSet="material-symbols-rounded">chat</mat-icon>
+                  <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Interrogador Analítico Vacío</p>
+                  <p class="text-xs text-slate-400 font-medium leading-normal max-w-[220px] mx-auto">Seleccione una pregunta rápida inferior o escriba una duda técnica.</p>
+                </div>
+              } @else {
+                @for (msg of aiChatHistory(); track msg.timestamp) {
+                  <div
+                    class="p-3 border rounded-2xl leading-relaxed text-slate-700 font-medium relative"
+                    [class.bg-slate-50]="msg.sender === 'user'"
+                    [class.bg-teal-50]="msg.sender === 'assistant'"
+                    [class.border-slate-200/60]="msg.sender === 'user'"
+                    [class.border-teal-100/60]="msg.sender === 'assistant'"
+                  >
+                    <div class="flex justify-between text-[10px] font-bold text-slate-400 uppercase mb-1">
+                      <span>{{ msg.sender === 'user' ? 'Tú' : 'Analista IA' }}</span>
+                      <span>{{ msg.timestamp | date:'HH:mm' }}</span>
+                    </div>
+                    <p class="whitespace-pre-wrap text-xs">{{ msg.text }}</p>
+                  </div>
+                }
+              }
+
+              @if (aiChatLoading()) {
+                <div class="p-3.5 bg-slate-50 border border-slate-200 animate-pulse text-xs font-extrabold uppercase text-slate-400 tracking-widest text-center rounded-2xl">
+                  Motor local procesando indicadores...
+                </div>
+              }
+            </div>
+
+            <!-- Pre-defined suggestion chips deck -->
+            <div class="space-y-1.5 border-t border-slate-100 pt-3 mb-2.5 shrink-0">
+              <span class="text-xs font-extrabold uppercase tracking-widest text-slate-400 block px-0.5">Preguntas Sugeridas</span>
+              <div class="flex flex-wrap gap-1.5">
+                <button 
+                  (click)="preguntarSugerencia('¿Cuál es el departamento con mayor riesgo?')"
+                  [disabled]="aiChatLoading()"
+                  class="px-2 sm:px-3 py-1.5 sm:py-2 bg-slate-50 hover:bg-teal-50 hover:text-teal-700 hover:border-teal-200 text-[10px] sm:text-xs font-bold uppercase tracking-wide border border-slate-200 rounded-lg text-slate-600 transition cursor-pointer text-left leading-none"
+                  data-tooltip="Preguntar a la IA sobre las áreas más congestionadas"
+                >
+                  Mayor Riesgo
+                </button>
+                <button 
+                  (click)="preguntarSugerencia('¿Qué acciones de balanceo se recomiendan?')"
+                  [disabled]="aiChatLoading()"
+                  class="px-2 sm:px-3 py-1.5 sm:py-2 bg-slate-50 hover:bg-teal-50 hover:text-teal-700 hover:border-teal-200 text-[10px] sm:text-xs font-bold uppercase tracking-wide border border-slate-200 rounded-lg text-slate-600 transition cursor-pointer text-left leading-none"
+                  data-tooltip="Preguntar a la IA sobre recomendaciones prácticas de balanceo"
+                >
+                  Acción Balanceo
+                </button>
+                <button 
+                  (click)="preguntarSugerencia('¿Cómo influye la tasa de riesgo actual?')"
+                  [disabled]="aiChatLoading()"
+                  class="px-2 sm:px-3 py-1.5 sm:py-2 bg-slate-50 hover:bg-teal-50 hover:text-teal-700 hover:border-teal-200 text-[10px] sm:text-xs font-bold uppercase tracking-wide border border-slate-200 rounded-lg text-slate-600 transition cursor-pointer text-left leading-none"
+                  data-tooltip="Analizar el impacto del índice general de riesgo"
+                >
+                  Influencia Riesgo
+                </button>
+              </div>
+            </div>
+
+            <!-- Input form with voice recognition dictation -->
+            <form (submit)="preguntarAlInformeIA(); $event.preventDefault()" class="flex items-stretch gap-2 shrink-0">
+              <div class="relative flex-1 flex items-center">
+                <input
+                  type="text"
+                  name="searchQuery"
+                  [(ngModel)]="aiSearchQuery"
+                  [disabled]="aiChatLoading()"
+                  placeholder="{{ voiceService.isListening() ? 'Escuchando voz...' : 'Escriba o dicte su duda de negocio...' }}"
+                  class="w-full bg-slate-50 border border-slate-200 pl-3.5 pr-10 py-2.5 text-xs font-semibold rounded-xl outline-none focus:border-teal-500/60 focus:bg-white transition-all disabled:opacity-50"
+                  [class.ring-2]="voiceService.isListening()"
+                  [class.ring-teal-500]="voiceService.isListening()"
+                />
+                <button
+                  type="button"
+                  (click)="toggleVoiceDictation()"
+                  [disabled]="aiChatLoading()"
+                  [class.text-rose-600]="voiceService.isListening()"
+                  [class.animate-pulse]="voiceService.isListening()"
+                  [class.text-slate-400]="!voiceService.isListening()"
+                  class="absolute right-2.5 p-1 rounded-lg hover:bg-slate-100 transition cursor-pointer flex items-center justify-center"
+                  data-tooltip="Dictar su pregunta usando el reconocimiento de voz integrado"
+                >
+                  <mat-icon fontSet="material-symbols-rounded" class="!text-lg">
+                    {{ voiceService.isListening() ? 'mic' : 'mic_none' }}
+                  </mat-icon>
+                </button>
+              </div>
+
+              <button
+                type="submit"
+                [disabled]="aiChatLoading() || !aiSearchQuery().trim()"
+                class="bg-teal-600 hover:bg-teal-700 disabled:bg-slate-200 disabled:opacity-40 text-white font-bold text-xs px-4 rounded-xl transition cursor-pointer"
+                data-tooltip="Enviar pregunta al consultor estratégico de IA"
+              >
+                Enviar
+              </button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+    }
+
+    <!-- TAB 3: AUDITORIA Y MONGO DB PERSISTENCE -->
+    @if (activeTab() === 'historial') {
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
+        
+        <!-- Recent Folio Audit List -->
+        <div class="history-container">
+          <div class="border-b border-slate-100 pb-2 flex justify-between items-center">
+            <h3 class="text-xs sm:text-sm font-black uppercase text-slate-800 tracking-tight">Folios de Trámite Recientes</h3>
+            <span class="text-[10px] sm:text-xs font-bold text-teal-700 bg-teal-50 border border-teal-100 px-2.5 py-0.5 rounded-full uppercase tracking-wider shrink-0">Trazabilidad</span>
+          </div>
+
+          <div class="space-y-2.5">
+            @for (wf of solicitudes().slice(0, 7); track wf.id) {
+              <div class="history-item-card" data-tooltip="Detalles rápidos de la solicitud cargada">
+                <div class="min-w-0 flex-1 space-y-1">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="font-bold text-slate-800 text-xs truncate max-w-[150px] sm:max-w-none" [title]="wf.titulo">{{ wf.titulo }}</span>
+                    <span class="bg-white border border-slate-200 text-[9px] sm:text-[10px] font-mono font-bold text-slate-500 px-1.5 py-0.5 rounded-full uppercase tracking-wider shrink-0">{{ wf.codigoSeguimiento }}</span>
+                  </div>
+                  <p class="text-[10px] sm:text-xs font-extrabold text-slate-400 uppercase tracking-wide">Depto: {{ wf.departamentoActual }}</p>
+                </div>
+                <div class="shrink-0 flex sm:block w-full sm:w-auto">
+                  <span
+                    class="px-2.5 py-0.5 text-[10px] sm:text-xs font-bold rounded-full border uppercase tracking-wider block text-center w-full sm:w-auto"
+                    [class]="wf.estado === 'APROBADO'
+                      ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
+                      : wf.estado === 'EN_REVISION'
+                        ? 'bg-indigo-50 border-indigo-100 text-indigo-700'
+                        : wf.estado === 'PENDIENTE'
+                          ? 'bg-slate-50 border-slate-200 text-slate-500'
+                          : 'bg-rose-50 border-rose-100 text-rose-700'"
+                  >
+                    {{ wf.estado }}
+                  </span>
+                </div>
+              </div>
+            } @empty {
+              <div class="border border-dashed border-slate-200 p-8 text-center text-slate-400 rounded-xl">
+                <p class="text-xs font-bold uppercase tracking-wider">Sin actividad operativa registrada</p>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- MongoDB Historical Persistent Reports -->
+        <div class="history-container">
+          <div class="border-b border-slate-100 pb-2 flex justify-between items-center">
+            <h3 class="text-xs sm:text-sm font-black uppercase text-slate-800 tracking-tight">Historial de Reportes Persistidos</h3>
+            <span class="text-[10px] sm:text-xs font-bold text-amber-700 bg-amber-50 border border-amber-100 px-2.5 py-0.5 rounded-full uppercase tracking-wider shrink-0">MongoDB</span>
+          </div>
+
+          <div class="space-y-2.5 max-h-[450px] overflow-y-auto pr-1">
+            @for (rep of reportesGuardados(); track rep.id) {
+              <div class="history-item-card" data-tooltip="Auditoría cuantitativa almacenada en la base de datos">
+                <div class="min-w-0 flex-1 space-y-1">
+                  <p class="font-bold text-slate-800 text-xs truncate max-w-[220px] sm:max-w-none" [title]="rep.titulo">{{ rep.titulo }}</p>
+                  <p class="text-[11px] sm:text-xs font-medium text-slate-500 uppercase tracking-wide leading-relaxed">{{ rep.descripcion }}</p>
+                  <div class="flex flex-wrap gap-x-3 gap-y-1 text-[10px] sm:text-xs font-bold text-slate-400 uppercase pt-1 border-t border-slate-100/50 sm:border-0 mt-1 sm:mt-0">
+                    <span>Trámites: {{ rep.totalSolicitudes }}</span>
+                    <span class="text-emerald-700">Tasa Cierre: {{ rep.tasaCierre }}%</span>
+                    <span class="truncate max-w-[100px] sm:max-w-none">Autor: {{ rep.creadoPor }}</span>
+                  </div>
+                </div>
+                <div class="shrink-0 flex sm:flex-col justify-end gap-1.5 mt-2 sm:mt-0 w-full sm:w-auto">
+                  <button
+                    (click)="verReporteGuardado(rep)"
+                    class="flex-1 sm:flex-initial px-3 py-2 sm:py-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-[10px] sm:text-xs font-bold uppercase rounded-lg cursor-pointer transition text-center"
+                    data-tooltip="Ver y re-explorar este reporte ejecutivo"
+                  >
+                    Ver
+                  </button>
+                  <button
+                    (click)="eliminarReporteEnBD(rep.id!)"
+                    class="flex-1 sm:flex-initial px-3 py-2 sm:py-1.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-[10px] sm:text-xs font-bold uppercase rounded-lg cursor-pointer transition text-center"
+                    data-tooltip="Eliminar permanentemente este reporte de MongoDB"
+                  >
+                    Borrar
+                  </button>
+                </div>
+              </div>
+            } @empty {
+              <div class="bg-white border border-dashed border-slate-200 p-8 text-center text-slate-400 rounded-xl">
+                <p class="text-xs font-bold uppercase tracking-wider">Sin reportes almacenados en base de datos</p>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  }
+
+  <!-- INTERACTIVE DIALOG MODAL: CALIBRACIÓN ESTADÍSTICA -->
+  @if (tfConsoleModalOpen()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-fade-in">
+      <div class="bg-white border border-slate-200 w-full max-w-xl p-4 sm:p-6 md:p-8 rounded-3xl shadow-2xl space-y-6 transform scale-100 transition-all duration-300 max-h-[90vh] overflow-y-auto">
+        
+        <!-- Modal Header -->
+        <div class="flex justify-between items-start border-b border-slate-100 pb-4">
+          <div class="space-y-1.5">
+            <div class="flex items-center gap-3">
+              <div class="p-2 bg-teal-50 rounded-xl text-teal-600 shrink-0">
+                <mat-icon fontSet="material-symbols-rounded" class="text-[28px] leading-7">psychology</mat-icon>
+              </div>
+              <div>
+                <span class="text-[10px] sm:text-xs font-semibold text-teal-600 tracking-wider uppercase block">Motor Predictivo Inteligente</span>
+                <h3 class="text-base sm:text-xl font-extrabold text-slate-900 tracking-tight leading-snug">
+                  Calibrador y Predictor de Flujos
+                </h3>
+              </div>
+            </div>
+          </div>
+          <button
+            (click)="cerrarModalCalibracion()"
+            [disabled]="tfTraining()"
+            class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition cursor-pointer disabled:opacity-40 shrink-0"
+            title="Cerrar ventana"
+          >
+            <mat-icon fontSet="material-symbols-rounded">close</mat-icon>
+          </button>
+        </div>
+
+        <!-- Info alert explaining Neural Networks -->
+        <div class="bg-gradient-to-r from-teal-50/50 to-emerald-50/20 p-4 sm:p-5 rounded-2xl border border-teal-50/50 space-y-3">
+          <h4 class="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-2">
+            <mat-icon fontSet="material-symbols-rounded" class="text-teal-600 text-[18px]">info</mat-icon>
+            ¿Qué está haciendo el sistema?
+          </h4>
+          <p class="text-[11px] sm:text-xs text-slate-600 leading-relaxed">
+            Este panel calibra una <strong>Red Neuronal artificial</strong> en tiempo real usando tu propio historial de solicitudes. El sistema analiza la prioridad de las tareas y la carga de cada departamento para predecir si una solicitud corre riesgo de superar su nivel de servicio estipulado (SLA) <strong>antes de que ocurra</strong>.
+          </p>
+        </div>
+        
+        <!-- Steps grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="p-3 rounded-xl border" [class.border-teal-200]="tfTraining() || tfModelTrained()" [class.bg-teal-50/30]="tfTraining() || tfModelTrained()" [class.border-slate-100]="!tfTraining() && !tfModelTrained()">
+            <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <mat-icon fontSet="material-symbols-rounded" class="text-[16px] text-teal-600">database</mat-icon>
+              1. Analizar Historial
+            </span>
+            <p class="text-[11px] text-slate-500 mt-1 leading-snug">Extrae tiempos promedio de solicitudes pasadas.</p>
+          </div>
+          <div class="p-3 rounded-xl border" [class.border-teal-200]="tfTraining()" [class.bg-teal-50/30]="tfTraining()" [class.border-slate-100]="!tfTraining()">
+            <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <mat-icon fontSet="material-symbols-rounded" class="text-[16px] text-teal-600">model_training</mat-icon>
+              2. Calibrar IA
+            </span>
+            <p class="text-[11px] text-slate-500 mt-1 leading-snug">Ajusta los tensores y pesos de prioridad.</p>
+          </div>
+          <div class="p-3 rounded-xl border" [class.border-teal-200]="tfModelTrained()" [class.bg-teal-50/30]="tfModelTrained()" [class.border-slate-100]="!tfModelTrained()">
+            <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <mat-icon fontSet="material-symbols-rounded" class="text-[16px] text-teal-600">offline_bolt</mat-icon>
+              3. Predecir SLA
+            </span>
+            <p class="text-[11px] text-slate-500 mt-1 leading-snug">Evita cuellos de botella alertando de retrasos.</p>
+          </div>
+        </div>
+        
+        <!-- Progress and Status Dashboard -->
+        <div class="p-4 sm:p-5 border border-slate-100 rounded-2xl space-y-4 bg-slate-50/30">
+          <div class="flex justify-between items-center gap-2">
+            <span class="text-xs font-semibold text-slate-500">Estado del Motor:</span>
+            <span class="px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-black tracking-wide uppercase flex items-center gap-1.5 shrink-0"
+              [class.bg-amber-100]="tfTraining()" [class.text-amber-700]="tfTraining()"
+              [class.bg-teal-100]="tfModelTrained()" [class.text-teal-700]="tfModelTrained()"
+              [class.bg-slate-100]="!tfTraining() && !tfModelTrained()" [class.text-slate-600]="!tfTraining() && !tfModelTrained()">
+              <span class="w-1.5 h-1.5 rounded-full" [class.bg-amber-500]="tfTraining()" [class.bg-teal-500]="tfModelTrained()" [class.bg-slate-400]="!tfTraining() && !tfModelTrained()" [class.animate-ping]="tfTraining()"></span>
+              {{ tfTraining() ? 'Optimizando...' : tfModelTrained() ? 'Optimizado' : 'Sin Calibrar' }}
+            </span>
+          </div>
+
+          @if (tfTraining() || tfModelTrained()) {
+            <div class="space-y-3">
+              <div class="flex justify-between text-xs text-slate-600">
+                <span>Progreso del Entrenamiento Neural:</span>
+                <span class="font-bold text-slate-800">{{ tfTrainingEpochs() }}/50 ciclos</span>
+              </div>
+              
+              <!-- Progress Bar -->
+              <div class="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full transition-all duration-300"
+                  [style.width.%]="(tfTrainingEpochs() / 50) * 100">
+                </div>
+              </div>
+
+              <div class="flex justify-between items-center text-xs border-t border-slate-100 pt-3 mt-1">
+                <div class="flex flex-col">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Margen de Error (Loss)</span>
+                  <span class="font-bold text-slate-700 text-sm mt-0.5">
+                    {{ tfTrainingLoss() > 0 ? (tfTrainingLoss() | number:'1.4-4') : 'Ajustando...' }}
+                  </span>
+                </div>
+                <div class="flex flex-col items-end">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Precisión de Estimación</span>
+                  <span class="font-bold text-teal-600 text-sm mt-0.5">
+                    {{ tfTrainingLoss() > 0 ? (100 - (tfTrainingLoss() * 10) | number:'1.1-1') + '%' : 'Calculando...' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          } @else {
+            <div class="text-center py-6 px-4 border border-dashed border-slate-200 rounded-xl bg-white">
+              <mat-icon fontSet="material-symbols-rounded" class="text-slate-350 text-[36px] w-[36px] h-[36px]">auto_mode</mat-icon>
+              <p class="text-[11px] sm:text-xs text-slate-500 font-semibold mt-2">
+                Se recomienda calibrar el motor para ajustar el predictor a los datos actuales del servidor.
+              </p>
+            </div>
+          }
+        </div>
+
+        <!-- Modal Actions -->
+        <div class="flex flex-col-reverse sm:flex-row gap-2.5 justify-end pt-3 border-t border-slate-100 w-full">
+          @if (!tfTraining() && !tfModelTrained()) {
+            <button
+              (click)="ejecutarEntrenamientoTensorFlow()"
+              class="w-full sm:w-auto px-5 py-2.5 bg-teal-600 hover:bg-teal-700 active:scale-95 text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-md flex items-center justify-center gap-1.5"
+            >
+              <mat-icon fontSet="material-symbols-rounded" class="text-[16px]">play_arrow</mat-icon>
+              Calibrar Motor IA
+            </button>
+          } @else if (tfModelTrained() && !tfTraining()) {
+            <button
+              (click)="ejecutarEntrenamientoTensorFlow()"
+              class="w-full sm:w-auto px-5 py-2.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer border border-slate-200 flex items-center justify-center gap-1.5"
+            >
+              <mat-icon fontSet="material-symbols-rounded" class="text-[16px]">refresh</mat-icon>
+              Volver a Calibrar
+            </button>
+          }
+          
+          <button
+            (click)="cerrarModalCalibracion()"
+            [disabled]="tfTraining()"
+            class="w-full sm:w-auto px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition cursor-pointer disabled:opacity-40 disabled:pointer-events-none text-center"
+          >
+            {{ tfModelTrained() ? 'Entendido' : 'Cerrar' }}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+</div>

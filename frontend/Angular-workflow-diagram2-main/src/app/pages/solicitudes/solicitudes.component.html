@@ -1,0 +1,525 @@
+<div class="solicitudes-modern-container animate-fade-in pb-12 space-y-6">
+
+  <!-- Floating Toast Notification for Clipboard Copy -->
+  @if (copiadoMensaje()) {
+    <div class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest px-4 py-3 rounded-xl shadow-2xl border border-slate-800 flex items-center gap-2 animate-slide-up">
+      <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+      <span>Código #{{ copiadoMensaje() }} copiado al portapapeles</span>
+    </div>
+  }
+
+  <!-- Unified Page Header -->
+  <app-page-header
+    title="Buzón Operativo"
+    subtitle="Bandeja de Trámites y Expedientes Activos"
+    eyebrow="Monitoreo Central"
+    icon="mail"
+  >
+    <!-- Layout Toggle Pills -->
+    <div class="bg-slate-100 p-1 rounded-xl flex gap-1 border border-slate-200/40 shrink-0">
+      <button 
+        (click)="vista.set('tarjetas')" 
+        [class.bg-white]="vista() === 'tarjetas'" 
+        [class.shadow-sm]="vista() === 'tarjetas'" 
+        [class.text-teal-700]="vista() === 'tarjetas'" 
+        class="px-3.5 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer text-slate-500 hover:text-slate-800"
+      >
+        <mat-icon fontSet="material-symbols-rounded" class="!text-xs">grid_view</mat-icon>
+        <span>Tarjetas</span>
+      </button>
+      <button 
+        (click)="vista.set('tabla')" 
+        [class.bg-white]="vista() === 'tabla'" 
+        [class.shadow-sm]="vista() === 'tabla'" 
+        [class.text-teal-700]="vista() === 'tabla'" 
+        class="px-3.5 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer text-slate-500 hover:text-slate-800"
+      >
+        <mat-icon fontSet="material-symbols-rounded" class="!text-xs">view_list</mat-icon>
+        <span>Tabla</span>
+      </button>
+    </div>
+    
+    <!-- Add New Solicitud button -->
+    <button 
+      (click)="nuevaSolicitud()" 
+      class="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-xl shadow-sm hover:shadow transition-all duration-200 cursor-pointer text-center"
+    >
+      <mat-icon fontSet="material-symbols-rounded" class="!text-sm font-bold">add</mat-icon>
+      <span>Nueva Solicitud</span>
+    </button>
+  </app-page-header>
+
+  <!-- Modern Telemetry KPI Cards -->
+  <section class="grid grid-cols-2 md:grid-cols-5 gap-4">
+    <!-- Totales -->
+    <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm hover:shadow transition-all duration-200 group relative">
+      <div class="absolute left-0 top-0 h-full w-1 bg-slate-300 group-hover:h-full transition-all"></div>
+      <div class="flex items-center justify-between">
+        <span class="text-[8px] sm:text-[9px] font-extrabold uppercase tracking-widest text-slate-400">Total General</span>
+        <div class="h-6 w-6 rounded-lg bg-slate-50 text-slate-500 flex items-center justify-center shrink-0">
+          <mat-icon fontSet="material-symbols-rounded" class="!text-xs">inventory</mat-icon>
+        </div>
+      </div>
+      <p class="text-2xl font-black text-slate-800 mt-2">{{ kpiStats().totales }}</p>
+      <span class="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-wider block mt-1">Expedientes creados</span>
+    </div>
+
+    <!-- Pendientes -->
+    <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm hover:shadow transition-all duration-200 group relative">
+      <div class="absolute left-0 top-0 h-full w-1 bg-amber-400 group-hover:h-full transition-all"></div>
+      <div class="flex items-center justify-between">
+        <span class="text-[8px] sm:text-[9px] font-extrabold uppercase tracking-widest text-slate-400">Pendientes</span>
+        <div class="h-6 w-6 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+          <mat-icon fontSet="material-symbols-rounded" class="!text-xs">schedule</mat-icon>
+        </div>
+      </div>
+      <p class="text-2xl font-black text-amber-600 mt-2">{{ kpiStats().pendientes }}</p>
+      <span class="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-wider block mt-1">En cola inicial</span>
+    </div>
+
+    <!-- En Revisión -->
+    <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm hover:shadow transition-all duration-200 group relative">
+      <div class="absolute left-0 top-0 h-full w-1 bg-blue-500 group-hover:h-full transition-all"></div>
+      <div class="flex items-center justify-between">
+        <span class="text-[8px] sm:text-[9px] font-extrabold uppercase tracking-widest text-slate-400">En revisión</span>
+        <div class="h-6 w-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+          <mat-icon fontSet="material-symbols-rounded" class="!text-xs">rate_review</mat-icon>
+        </div>
+      </div>
+      <p class="text-2xl font-black text-blue-600 mt-2">{{ kpiStats().enRevision }}</p>
+      <span class="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-wider block mt-1">Bajo dictamen</span>
+    </div>
+
+    <!-- Aprobadas -->
+    <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm hover:shadow transition-all duration-200 group relative">
+      <div class="absolute left-0 top-0 h-full w-1 bg-emerald-500 group-hover:h-full transition-all"></div>
+      <div class="flex items-center justify-between">
+        <span class="text-[8px] sm:text-[9px] font-extrabold uppercase tracking-widest text-slate-400">Aprobados</span>
+        <div class="h-6 w-6 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+          <mat-icon fontSet="material-symbols-rounded" class="!text-xs">check_circle</mat-icon>
+        </div>
+      </div>
+      <p class="text-2xl font-black text-emerald-600 mt-2">{{ kpiStats().aprobadas }}</p>
+      <span class="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-wider block mt-1">Flujo finalizado</span>
+    </div>
+
+    <!-- Vencidas SLA -->
+    <div class="col-span-2 md:col-span-1 bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm hover:shadow transition-all duration-200 group relative">
+      <div class="absolute left-0 top-0 h-full w-1 bg-rose-500 group-hover:h-full transition-all"></div>
+      <div class="flex items-center justify-between">
+        <span class="text-[8px] sm:text-[9px] font-extrabold uppercase tracking-widest text-slate-400">Vencidos SLA</span>
+        <div class="h-6 w-6 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+          <mat-icon fontSet="material-symbols-rounded" class="!text-xs">error</mat-icon>
+        </div>
+      </div>
+      <p class="text-2xl font-black text-rose-600 mt-2">{{ kpiStats().vencidas }}</p>
+      <span class="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-wider block mt-1">Tiempo de SLA superado</span>
+    </div>
+  </section>
+
+  <!-- Interactive Control Panel & Filters -->
+  <section class="bg-slate-50/50 border border-slate-200/80 p-4 sm:p-5 rounded-2xl space-y-4 shadow-sm">
+    <!-- Row 1: Futuristic State Selector Pills (Click to instantly filter) -->
+    <div class="space-y-2">
+      <span class="text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider text-slate-400 px-1">Filtro Rápido por Estado</span>
+      <div class="flex overflow-x-auto gap-2 pb-1.5 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-none whitespace-nowrap">
+        <!-- TODOS -->
+        <button 
+          (click)="filtroEstado.set('TODOS')" 
+          [class]="filtroEstado() === 'TODOS' 
+            ? 'bg-slate-800 text-white border-slate-800' 
+            : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200'" 
+          class="px-4 py-2 border rounded-full text-[9px] font-bold uppercase tracking-wider transition-all duration-150 flex items-center gap-1.5 cursor-pointer shadow-sm shrink-0"
+        >
+          <span>Todos</span>
+          <span [class]="filtroEstado() === 'TODOS' ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-600'" class="px-1.5 py-0.5 rounded-full font-bold text-[8px]">{{ kpiStats().totales }}</span>
+        </button>
+
+        <!-- PENDIENTE -->
+        <button 
+          (click)="filtroEstado.set('PENDIENTE')" 
+          [class]="filtroEstado() === 'PENDIENTE' 
+            ? 'bg-amber-500 text-white border-amber-500' 
+            : 'bg-white hover:bg-amber-50/20 text-slate-600 border-slate-200'" 
+          class="px-4 py-2 border rounded-full text-[9px] font-bold uppercase tracking-wider transition-all duration-150 flex items-center gap-1.5 cursor-pointer shadow-sm shrink-0"
+        >
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" [class.animate-pulse]="filtroEstado() === 'PENDIENTE'"></span>
+          <span>Pendientes</span>
+          <span [class]="filtroEstado() === 'PENDIENTE' ? 'bg-amber-600 text-white' : 'bg-amber-55 text-amber-700'" class="px-1.5 py-0.5 rounded-full font-bold text-[8px]">{{ kpiStats().pendientes }}</span>
+        </button>
+
+        <!-- EN_REVISION -->
+        <button 
+          (click)="filtroEstado.set('EN_REVISION')" 
+          [class]="filtroEstado() === 'EN_REVISION' 
+            ? 'bg-blue-600 text-white border-blue-600' 
+            : 'bg-white hover:bg-blue-50/20 text-slate-600 border-slate-200'" 
+          class="px-4 py-2 border rounded-full text-[9px] font-bold uppercase tracking-wider transition-all duration-150 flex items-center gap-1.5 cursor-pointer shadow-sm shrink-0"
+        >
+          <span class="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" [class.animate-pulse]="filtroEstado() === 'EN_REVISION'"></span>
+          <span>En revisión</span>
+          <span [class]="filtroEstado() === 'EN_REVISION' ? 'bg-blue-700 text-white' : 'bg-blue-50 text-blue-700'" class="px-1.5 py-0.5 rounded-full font-bold text-[8px]">{{ kpiStats().enRevision }}</span>
+        </button>
+
+        <!-- APROBADO -->
+        <button 
+          (click)="filtroEstado.set('APROBADO')" 
+          [class]="filtroEstado() === 'APROBADO' 
+            ? 'bg-emerald-600 text-white border-emerald-600' 
+            : 'bg-white hover:bg-emerald-50/20 text-slate-600 border-slate-200'" 
+          class="px-4 py-2 border rounded-full text-[9px] font-bold uppercase tracking-wider transition-all duration-150 flex items-center gap-1.5 cursor-pointer shadow-sm shrink-0"
+        >
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" [class.animate-pulse]="filtroEstado() === 'APROBADO'"></span>
+          <span>Aprobados</span>
+          <span [class]="filtroEstado() === 'APROBADO' ? 'bg-emerald-700 text-white' : 'bg-emerald-50 text-emerald-700'" class="px-1.5 py-0.5 rounded-full font-bold text-[8px]">{{ kpiStats().aprobadas }}</span>
+        </button>
+
+        <!-- RECHAZADO -->
+        <button 
+          (click)="filtroEstado.set('RECHAZADO')" 
+          [class]="filtroEstado() === 'RECHAZADO' 
+            ? 'bg-rose-600 text-white border-rose-600' 
+            : 'bg-white hover:bg-rose-50/20 text-slate-600 border-slate-200'" 
+          class="px-4 py-2 border rounded-full text-[9px] font-bold uppercase tracking-wider transition-all duration-150 flex items-center gap-1.5 cursor-pointer shadow-sm shrink-0"
+        >
+          <span class="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" [class.animate-pulse]="filtroEstado() === 'RECHAZADO'"></span>
+          <span>Rechazados</span>
+          <span [class]="filtroEstado() === 'RECHAZADO' ? 'bg-rose-750 text-white' : 'bg-rose-50 text-rose-700'" class="px-1.5 py-0.5 rounded-full font-bold text-[8px]">{{ solicitudesBase().length - kpiStats().pendientes - kpiStats().enRevision - kpiStats().aprobadas }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Row 2: Search Command & Selector Filters -->
+    <div class="grid grid-cols-2 lg:grid-cols-12 gap-3 sm:gap-4 items-end">
+      <!-- High Fidelity Search Bar -->
+      <div class="col-span-2 lg:col-span-5 space-y-1.5">
+        <label class="text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider text-slate-400 px-1">Buscar Solicitud</label>
+        <div class="bg-white border border-slate-250/80 px-3.5 py-2.5 rounded-xl shadow-inner flex items-center gap-2">
+          <mat-icon fontSet="material-symbols-rounded" class="text-slate-400 !text-lg shrink-0">search</mat-icon>
+          <input 
+            type="text" 
+            [(ngModel)]="searchInputValue" 
+            (keyup.enter)="buscar()" 
+            placeholder="Ingrese código o palabras clave..." 
+            class="w-full bg-transparent border-none text-xs font-semibold text-slate-800 outline-none placeholder:text-slate-350"
+          />
+          @if (searchInputValue().trim()) {
+            <button (click)="searchInputValue.set(''); buscar()" class="text-slate-400 hover:text-slate-600 transition shrink-0 cursor-pointer">
+              <mat-icon fontSet="material-symbols-rounded" class="!text-base">close</mat-icon>
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Priority Filter -->
+      <div class="col-span-1 lg:col-span-2 space-y-1.5">
+        <label class="text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider text-slate-400 px-1">Prioridad</label>
+        <select 
+          [ngModel]="filtroPrioridad()" 
+          (ngModelChange)="filtroPrioridad.set($event)"
+          class="w-full h-11 bg-white border border-slate-250/85 px-3 rounded-xl text-xs font-bold text-slate-700 outline-none shadow-sm cursor-pointer hover:bg-slate-50/50 transition-colors"
+        >
+          <option value="TODAS">TODAS</option>
+          <option value="URGENTE">URGENTE</option>
+          <option value="ALTA">ALTA</option>
+          <option value="MEDIA">MEDIA</option>
+          <option value="BAJA">BAJA</option>
+        </select>
+      </div>
+
+      <!-- SLA state Filter -->
+      <div class="col-span-1 lg:col-span-2 space-y-1.5">
+        <label class="text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider text-slate-400 px-1">SLA</label>
+        <select 
+          [ngModel]="filtroSla()" 
+          (ngModelChange)="filtroSla.set($event)"
+          class="w-full h-11 bg-white border border-slate-250/85 px-3 rounded-xl text-xs font-bold text-slate-700 outline-none shadow-sm cursor-pointer hover:bg-slate-50/50 transition-colors"
+        >
+          <option value="TODOS">TODOS</option>
+          <option value="EN_TIEMPO">EN TIEMPO</option>
+          <option value="POR_VENCER">POR VENCER</option>
+          <option value="VENCIDO">VENCIDO</option>
+          <option value="CERRADO">CERRADO</option>
+        </select>
+      </div>
+
+      <!-- Sort By Selection -->
+      <div class="col-span-1 lg:col-span-2 space-y-1.5">
+        <label class="text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider text-slate-400 px-1">Ordenar</label>
+        <select 
+          [ngModel]="ordenarPor()" 
+          (ngModelChange)="ordenarPor.set($event)"
+          class="w-full h-11 bg-white border border-slate-250/85 px-3 rounded-xl text-xs font-bold text-slate-700 outline-none shadow-sm cursor-pointer hover:bg-slate-50/50 transition-colors"
+        >
+          <option value="FECHA_DESC">RECIENTES PRIMERO</option>
+          <option value="FECHA_ASC">ANTIGUAS PRIMERO</option>
+          <option value="PRIORIDAD">PRIORIDAD MÁXIMA</option>
+          <option value="SLA">SLA CRÍTICO</option>
+        </select>
+      </div>
+
+      <!-- Reset Filters Button -->
+      <div class="col-span-1 lg:col-span-1">
+        <button 
+          (click)="limpiarFiltros()" 
+          class="w-full h-11 bg-white border border-slate-250/80 hover:bg-slate-100/80 text-slate-600 hover:text-slate-800 text-[10px] font-extrabold uppercase tracking-wider rounded-xl transition duration-200 shadow-sm cursor-pointer flex items-center justify-center"
+          title="Limpiar filtros"
+        >
+          <mat-icon fontSet="material-symbols-rounded" class="!text-sm font-bold">rotate_left</mat-icon>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTENT VIEW AREA -->
+  @if (solicitudesResource.isLoading()) {
+    <div class="bg-white border border-slate-200/80 rounded-2xl p-16 text-center shadow-sm">
+      <div class="h-8 w-8 border-3 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest animate-pulse">Consultando base de datos operacional...</p>
+    </div>
+  } @else {
+
+    <!-- VIEW 1: DOSSIER CARDS (Vista de Tarjetas) -->
+    @if (vista() === 'tarjetas') {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        @for (item of solicitudes(); track item.id) {
+          <!-- Dossier Folder Card -->
+          <div 
+            (click)="verDetalle(item.id)" 
+            class="bg-white border border-slate-200/80 hover:border-slate-350 hover:shadow-md rounded-2xl p-4 sm:p-5 shadow-sm transition-all duration-200 flex flex-col gap-4 relative group overflow-hidden cursor-pointer"
+          >
+            <!-- Vertical Priority Indicator Line on left -->
+            <div 
+              [class]="item.prioridad === 'URGENTE' 
+                ? 'bg-rose-500' 
+                : item.prioridad === 'ALTA' 
+                  ? 'bg-amber-400' 
+                  : item.prioridad === 'MEDIA' 
+                    ? 'bg-sky-400' 
+                    : 'bg-slate-300'" 
+              class="absolute left-0 top-0 h-full w-1.5 transition-all"
+            ></div>
+
+            <!-- Card Header: tracking code and status badge -->
+            <div class="flex justify-between items-center gap-2 border-b border-slate-100 pb-3">
+              <div class="flex items-center gap-2 min-w-0">
+                <span 
+                  (click)="copiarCodigo($event, item.codigoSeguimiento)" 
+                  class="font-mono text-[9px] sm:text-[10px] font-extrabold bg-slate-50 border border-slate-200/70 hover:border-teal-300 hover:bg-teal-50/20 text-slate-600 px-2 py-0.5 rounded-lg flex items-center gap-1 group-hover/code:text-teal-700 transition truncate"
+                  title="Click para copiar código"
+                >
+                  #{{ item.codigoSeguimiento }}
+                  <mat-icon fontSet="material-symbols-rounded" class="!text-[9px] sm:!text-[10px] text-slate-400 shrink-0">content_copy</mat-icon>
+                </span>
+              </div>
+              <span 
+                class="px-2 py-0.5 text-[8px] sm:text-[9px] font-extrabold uppercase rounded-full border tracking-wider shrink-0"
+                [class]="getEstadoBadgeClass(item.estado)"
+              >
+                {{ item.estado?.replace('_', ' ') }}
+              </span>
+            </div>
+
+            <!-- Card Title & Department -->
+            <div class="space-y-1">
+              <h3 class="text-xs sm:text-sm font-black text-slate-800 leading-snug group-hover:text-teal-700 transition-colors line-clamp-2">
+                {{ item.titulo }}
+              </h3>
+              <p class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1 min-w-0">
+                <mat-icon fontSet="material-symbols-rounded" class="!text-[10px] text-slate-400 shrink-0">lan</mat-icon>
+                <span class="truncate" [title]="item.departamentoActual">Depto: {{ item.departamentoActual }}</span>
+              </p>
+            </div>
+
+            <!-- Flow Step Indicators -->
+            <div class="bg-slate-50/60 border border-slate-200/60 p-3 rounded-xl space-y-2 text-[10px]">
+              <div class="flex justify-between items-center gap-2">
+                <span class="text-slate-400 font-bold uppercase text-[8px] shrink-0">Iniciado por:</span>
+                <span class="font-bold text-slate-700 truncate max-w-[120px] sm:max-w-none" [title]="item.usuarioCreador">{{ item.usuarioCreador }}</span>
+              </div>
+              <div class="flex justify-between items-center gap-2">
+                <span class="text-slate-400 font-bold uppercase text-[8px] shrink-0">Asignado a:</span>
+                <span class="font-bold text-slate-750 flex items-center gap-1 min-w-0">
+                  @if (item.usuarioAsignado) {
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                    <span class="truncate max-w-[120px] sm:max-w-none" [title]="item.usuarioAsignado">{{ item.usuarioAsignado }}</span>
+                  } @else {
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-350 shrink-0"></span>
+                    <span class="italic text-slate-400 truncate">Sin asignar</span>
+                  }
+                </span>
+              </div>
+            </div>
+
+            <!-- Card Footer: Priority / SLA meter & Action button -->
+            <div class="flex justify-between items-center gap-3 border-t border-slate-100 pt-3.5 mt-auto">
+              <!-- SLA Countdown -->
+              <div class="space-y-1">
+                <span 
+                  class="px-2 py-0.5 text-[8px] font-extrabold uppercase rounded-full border tracking-wide block w-fit"
+                  [class]="getSlaBadgeClass(item.estadoSla)"
+                >
+                  {{ etiquetaSla(item.estadoSla) }}
+                </span>
+                @if (item.minutosRestantesSla != null && item.estadoSla !== 'CERRADO') {
+                  <span 
+                    [class.text-rose-600]="item.minutosRestantesSla < 0" 
+                    [class.text-slate-450]="item.minutosRestantesSla >= 0" 
+                    class="text-[9px] font-bold block"
+                  >
+                    @if (item.minutosRestantesSla < 0) {
+                      <span class="inline-flex items-center gap-0.5">
+                        <mat-icon fontSet="material-symbols-rounded" class="!text-[10px] text-rose-500">warning</mat-icon>
+                        {{ -item.minutosRestantesSla }}m vencido
+                      </span>
+                    } @else {
+                      <span>Quedan {{ item.minutosRestantesSla }}m</span>
+                    }
+                  </span>
+                }
+              </div>
+
+              <!-- Action button -->
+              <button 
+                (click)="verDetalle(item.id)" 
+                class="px-3.5 py-2 bg-slate-50 group-hover:bg-teal-600 group-hover:text-white border border-slate-200 group-hover:border-teal-600 text-slate-700 text-[9px] font-bold uppercase rounded-lg transition-all duration-200 flex items-center gap-1 cursor-pointer shrink-0"
+              >
+                <span>Expediente</span>
+                <mat-icon fontSet="material-symbols-rounded" class="!text-xs">arrow_forward</mat-icon>
+              </button>
+            </div>
+          </div>
+        } @empty {
+          <!-- Empty Dossiers State -->
+          <div class="md:col-span-2 lg:col-span-3 border border-dashed border-slate-250 bg-slate-50/50 p-16 text-center space-y-4 rounded-2xl">
+            <div class="h-12 w-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400">
+              <mat-icon fontSet="material-symbols-rounded" class="!text-2xl">folder_off</mat-icon>
+            </div>
+            <div class="space-y-1">
+              <h3 class="text-xs font-black uppercase text-slate-800">No se encontraron expedientes</h3>
+              <p class="text-[10px] text-slate-450 font-medium">Pruebe ajustando los filtros superiores o inicie una nueva solicitud operativa.</p>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- VIEW 2: COMPACT CORPORATE TABLE (Vista de Tabla) -->
+    @if (vista() === 'tabla') {
+      <div class="bg-white border border-slate-200/80 rounded-2xl p-2 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-thin">
+          <table class="w-full border-collapse">
+            <thead>
+              <tr class="bg-slate-50/80 border-b border-slate-100">
+                <th class="px-5 py-4 text-left text-[8px] font-extrabold uppercase tracking-widest text-slate-400">Código</th>
+                <th class="px-5 py-4 text-left text-[8px] font-extrabold uppercase tracking-widest text-slate-400">Título / Expediente</th>
+                <th class="px-5 py-4 text-left text-[8px] font-extrabold uppercase tracking-widest text-slate-400">Participantes</th>
+                <th class="px-5 py-4 text-left text-[8px] font-extrabold uppercase tracking-widest text-slate-400">Prioridad</th>
+                <th class="px-5 py-4 text-left text-[8px] font-extrabold uppercase tracking-widest text-slate-400">SLA Métrica</th>
+                <th class="px-5 py-4 text-center text-[8px] font-extrabold uppercase tracking-widest text-slate-400">Estado</th>
+                <th class="px-5 py-4 text-right text-[8px] font-extrabold uppercase tracking-widest text-slate-400">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              @for (item of solicitudes(); track item.id) {
+                <tr 
+                  (click)="verDetalle(item.id)" 
+                  class="hover:bg-slate-50/50 transition-colors cursor-pointer group"
+                >
+                  <!-- Code -->
+                  <td class="px-5 py-4">
+                    <span 
+                      (click)="copiarCodigo($event, item.codigoSeguimiento)"
+                      class="font-mono text-[9px] font-extrabold text-slate-600 bg-slate-50 border border-slate-200 group-hover:bg-teal-50/30 group-hover:border-teal-200 group-hover:text-teal-700 px-2 py-0.5 rounded-md flex items-center w-fit gap-1 whitespace-nowrap"
+                    >
+                      #{{ item.codigoSeguimiento }}
+                      <mat-icon fontSet="material-symbols-rounded" class="!text-[9px] text-slate-400 shrink-0">content_copy</mat-icon>
+                    </span>
+                  </td>
+
+                  <!-- Title / Department -->
+                  <td class="px-5 py-4 max-w-xs">
+                    <span class="block text-xs font-black text-slate-800 truncate group-hover:text-teal-700 transition-colors">{{ item.titulo }}</span>
+                    <span class="block text-[8px] font-bold text-slate-400 uppercase tracking-wider mt-0.5 whitespace-nowrap">{{ item.departamentoActual }}</span>
+                  </td>
+
+                  <!-- Users Involved -->
+                  <td class="px-5 py-4 text-[10px]">
+                    <div class="flex flex-col gap-0.5 text-slate-600 font-medium whitespace-nowrap">
+                      <span class="text-[8px] font-bold text-slate-400 uppercase">Solicitante: <b class="text-slate-700">{{ item.usuarioCreador }}</b></span>
+                      <span class="text-[8px] font-bold text-slate-400 uppercase">Asignado: 
+                        <b [class.italic]="!item.usuarioAsignado" [class.text-slate-400]="!item.usuarioAsignado" class="text-slate-700">
+                          {{ item.usuarioAsignado || 'Sin Asignar' }}
+                        </b>
+                      </span>
+                    </div>
+                  </td>
+
+                  <!-- Priority Badge -->
+                  <td class="px-5 py-4">
+                    <span 
+                      class="px-2 py-0.5 text-[8px] font-extrabold uppercase rounded-full border tracking-wider whitespace-nowrap"
+                      [class]="getPrioridadBadgeClass(item.prioridad)"
+                    >
+                      {{ item.prioridad }}
+                    </span>
+                  </td>
+
+                  <!-- SLA Column -->
+                  <td class="px-5 py-4 text-[10px]">
+                    <div class="flex flex-col gap-0.5 whitespace-nowrap">
+                      <span 
+                        class="px-2 py-0.5 text-[8px] font-extrabold uppercase rounded-full border tracking-wide w-fit"
+                        [class]="getSlaBadgeClass(item.estadoSla)"
+                      >
+                        {{ etiquetaSla(item.estadoSla) }}
+                      </span>
+                      @if (item.minutosRestantesSla != null && item.estadoSla !== 'CERRADO') {
+                        <span 
+                          [class.text-rose-600]="item.minutosRestantesSla < 0" 
+                          [class.text-slate-400]="item.minutosRestantesSla >= 0" 
+                          class="text-[9px] font-bold block"
+                        >
+                          {{ item.minutosRestantesSla < 0 ? (-item.minutosRestantesSla) + 'm retrasado' : item.minutosRestantesSla + 'm restantes' }}
+                        </span>
+                      }
+                    </div>
+                  </td>
+
+                  <!-- Status Badge -->
+                  <td class="px-5 py-4 text-center">
+                    <span 
+                      class="px-2.5 py-0.5 text-[8px] font-extrabold uppercase rounded-full border tracking-wider inline-block whitespace-nowrap"
+                      [class]="getEstadoBadgeClass(item.estado)"
+                    >
+                      {{ item.estado?.replace('_', ' ') }}
+                    </span>
+                  </td>
+
+                  <!-- Actions -->
+                  <td class="px-5 py-4 text-right" (click)="$event.stopPropagation()">
+                    <button 
+                      (click)="verDetalle(item.id)"
+                      class="px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-teal-600 hover:text-white hover:border-teal-600 text-[9px] font-bold uppercase rounded-lg transition"
+                    >
+                      Ver
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="7" class="px-5 py-12 text-center text-slate-400 font-medium">
+                    <mat-icon fontSet="material-symbols-rounded" class="!text-3xl text-slate-300 mb-1.5">folder_off</mat-icon>
+                    <p class="text-[10px] font-bold uppercase tracking-wider">No se encontraron expedientes en la base de datos</p>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+  }
+
+</div>

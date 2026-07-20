@@ -1,0 +1,49 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: workflow-mongo
+    restart: unless-stopped
+    ports:
+      - "${MONGO_PUBLIC_PORT:-27017}:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  backend:
+    build:
+      context: ./backend/software-parcial-backend-main
+    container_name: workflow-backend
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      PORT: 8080
+      MONGO_URI: mongodb://mongo:27017/workflow_db
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:8081}
+    ports:
+      - "${BACKEND_PUBLIC_PORT:-8080}:8080"
+    volumes:
+      - backend_uploads:/app/uploads
+
+  frontend:
+    build:
+      context: ./frontend/Angular-workflow-diagram2-main
+    container_name: workflow-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      API_URL: ${FRONTEND_API_URL:-}
+    ports:
+      - "${FRONTEND_PUBLIC_PORT:-8081}:8080"
+
+volumes:
+  mongo_data:
+  backend_uploads:

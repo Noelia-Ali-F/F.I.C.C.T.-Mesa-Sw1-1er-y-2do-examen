@@ -1,0 +1,704 @@
+<div class="wf-ws-shell">
+
+  <!-- Minimalist Premium Header -->
+  <header class="wf-ws-header">
+    <div class="wf-ws-brand">
+      <div class="wf-ws-logo-mark">WF</div>
+      <div>
+        <h1 class="wf-ws-brand-title">Diseñador de Procesos</h1>
+        <span class="wf-ws-brand-subtitle">BPMN Workspace · {{ activeWorkflow().name }}</span>
+      </div>
+    </div>
+
+    <!-- Toggle Button visible only on mobile -->
+    <button class="wf-ws-mobile-toggle" (click)="mobileMenuOpen.set(!mobileMenuOpen())" [class.is-active]="mobileMenuOpen()">
+      <mat-icon fontSet="material-symbols-rounded">{{ mobileMenuOpen() ? 'close' : 'menu' }}</mat-icon>
+    </button>
+
+    <!-- Desktop controls (hidden on mobile via CSS) -->
+    <div class="wf-ws-header-desktop-controls">
+      <!-- Workflow Definition Selector -->
+      <div class="wf-ws-selector-container">
+        <div class="wf-ws-selector-wrapper">
+          <mat-icon fontSet="material-symbols-rounded" class="wf-ws-selector-icon">account_tree</mat-icon>
+          <select [ngModel]="selectedWorkflowKey()" (ngModelChange)="cambiarWorkflowSeleccionado($event)"
+            class="wf-ws-select-definition">
+            @for (def of definitions(); track def.key) {
+            <option [value]="def.key">{{ def.name.length > 20 ? def.name.substring(0, 20) + '...' : def.name }} (v{{ def.version }})</option>
+            }
+          </select>
+        </div>
+        @if (authService.currentUser()?.rol === 'ADMINISTRADOR') {
+        <button (click)="abrirModalNuevoProceso()" title="Crear nuevo proceso" class="wf-ws-new-process-btn">
+          <mat-icon fontSet="material-symbols-rounded" class="wf-ws-new-process-btn-icon">add</mat-icon>
+          <span class="wf-ws-btn-text">Nuevo</span>
+        </button>
+        }
+      </div>
+
+      <!-- Live Collaborators -->
+      <div class="wf-ws-collabs">
+        <span class="wf-ws-collab-dot" [style.background-color]="collaboratorsList().length > 0 ? '#10b981' : '#cbd5e1'"></span>
+        <div class="wf-ws-collabs-avatars">
+          @for (c of collaboratorsList(); track c.username) {
+          <div class="wf-ws-avatar-badge"
+            [style.background]="c.rol === 'ADMINISTRADOR' ? 'var(--theme-primary-color)' : 'var(--theme-secondary-dark-color)'"
+            [title]="c.name + ' (' + c.rol + ') · ' + c.depto">
+            {{ c.username.substring(0, 2).toUpperCase() }}
+          </div>
+          } @empty {
+            <span class="text-[9px] font-bold text-slate-400 uppercase">En solitario</span>
+          }
+        </div>
+      </div>
+
+      <!-- Collaborative Action Center -->
+      <div class="wf-ws-controls">
+        <div class="wf-ws-save-status-container flex flex-col justify-center">
+          <span class="wf-ws-save-status-label" [style.color]="hasUnsavedChanges() ? '#d97706' : '#0d9488'">
+            {{ hasUnsavedChanges() ? 'Cambios pendientes' : 'Sincronizado' }}
+          </span>
+          <span class="wf-ws-save-status-text">v{{ diagramVersion() }} · {{ lastEditor() || 'Sistema' }}</span>
+        </div>
+
+        @if (authService.currentUser()?.rol === 'ADMINISTRADOR' || authService.currentUser()?.rol === 'REVISOR') {
+        <div class="flex items-center gap-1.5">
+          <!-- Asistente de Diagramación por Voz AI -->
+          <button
+            (click)="toggleVoiceDiagramming()"
+            [disabled]="loading()"
+            [class.animate-pulse]="voiceService.isListening()"
+            class="wf-ws-btn"
+            [class.wf-ws-btn-voice-active]="voiceService.isListening()"
+            [class.wf-ws-btn-secondary]="!voiceService.isListening()"
+            [title]="voiceService.isSupported() ? 'Crear procesos hablando' : 'La voz no está disponible aquí. Se abrirá un fallback por texto.'"
+          >
+            <mat-icon fontSet="material-symbols-rounded" class="scale-75">
+              {{ voiceService.isListening() ? 'stop_circle' : 'settings_voice' }}
+            </mat-icon>
+            <span class="wf-ws-btn-text">
+              {{ voiceService.isListening() ? 'Detener y procesar' : 'Diagramar por Voz' }}
+            </span>
+          </button>
+
+          @if (hasUnsavedChanges()) {
+          <input type="text" [(ngModel)]="saveComment" placeholder="Nota de cambio..." class="wf-ws-input w-[120px] text-[10px]" />
+          }
+          <button (click)="guardarDiagrama()" [disabled]="saving() || !hasUnsavedChanges()"
+            class="wf-ws-btn wf-ws-btn-primary"
+            [class.wf-btn-enabled]="hasUnsavedChanges()"
+            [class.wf-btn-disabled]="!hasUnsavedChanges()">
+            <mat-icon fontSet="material-symbols-rounded" class="scale-75">cloud_upload</mat-icon>
+            <span>Publicar</span>
+          </button>
+        </div>
+        }
+
+        <button routerLink="/" class="wf-ws-btn wf-ws-btn-danger">
+            <mat-icon fontSet="material-symbols-rounded" class="scale-75">logout</mat-icon>
+            <span>Salir</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Collapsible Menu Panel -->
+  @if (mobileMenuOpen()) {
+  <div class="wf-ws-mobile-menu animate-fade-in">
+    <div class="wf-ws-mobile-menu-section">
+      <span class="wf-ws-mobile-menu-label">PROCESO SELECCIONADO</span>
+      <div class="wf-ws-selector-wrapper w-full">
+        <mat-icon fontSet="material-symbols-rounded" class="wf-ws-selector-icon">account_tree</mat-icon>
+        <select [ngModel]="selectedWorkflowKey()" (ngModelChange)="cambiarWorkflowSeleccionado($event); mobileMenuOpen.set(false)"
+          class="wf-ws-select-definition w-full bg-transparent border-none outline-none text-xs font-bold text-slate-800">
+          @for (def of definitions(); track def.key) {
+          <option [value]="def.key">{{ def.name }} (v{{ def.version }})</option>
+          }
+        </select>
+      </div>
+      @if (authService.currentUser()?.rol === 'ADMINISTRADOR') {
+      <button (click)="abrirModalNuevoProceso(); mobileMenuOpen.set(false)" class="wf-ws-new-process-btn w-full mt-2 justify-center py-2.5">
+        <mat-icon fontSet="material-symbols-rounded" class="wf-ws-new-process-btn-icon">add</mat-icon>
+        <span>Nuevo Proceso</span>
+      </button>
+      }
+    </div>
+
+    <div class="wf-ws-mobile-menu-section">
+      <span class="wf-ws-mobile-menu-label">ESTADO DE CAMBIOS</span>
+      <div class="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
+        <div class="flex flex-col">
+          <span class="text-[10px] font-bold uppercase tracking-wider" [style.color]="hasUnsavedChanges() ? '#d97706' : '#0d9488'">
+            {{ hasUnsavedChanges() ? 'Cambios pendientes' : 'Sincronizado' }}
+          </span>
+          <span class="text-[9px] font-semibold text-slate-400">Versión {{ diagramVersion() }} · Modificado por: {{ lastEditor() || 'Sistema' }}</span>
+        </div>
+      </div>
+    </div>
+
+    @if (collaboratorsList().length > 0) {
+    <div class="wf-ws-mobile-menu-section">
+      <span class="wf-ws-mobile-menu-label">COLABORADORES ONLINE ({{ collaboratorsList().length }})</span>
+      <div class="flex flex-wrap gap-2 pt-1">
+        @for (c of collaboratorsList(); track c.username) {
+        <div class="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-700">
+          <span class="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
+          <span>{{ c.name }} ({{ c.depto }})</span>
+        </div>
+        }
+      </div>
+    </div>
+    }
+
+    <div class="wf-ws-mobile-menu-section mt-auto flex flex-col gap-2 pb-4">
+      @if (authService.currentUser()?.rol === 'ADMINISTRADOR' || authService.currentUser()?.rol === 'REVISOR') {
+        @if (hasUnsavedChanges()) {
+          <input type="text" [(ngModel)]="saveComment" placeholder="Comentario de publicación..." class="wf-ws-input py-2.5 w-full text-xs" />
+        }
+        <button (click)="guardarDiagrama(); mobileMenuOpen.set(false)" [disabled]="saving() || !hasUnsavedChanges()"
+          class="wf-ws-btn wf-ws-btn-primary w-full py-3 font-bold justify-center">
+          <mat-icon fontSet="material-symbols-rounded">cloud_upload</mat-icon>
+          <span>Publicar Cambios</span>
+        </button>
+      }
+
+      <button routerLink="/" class="wf-ws-btn wf-ws-btn-danger w-full py-3 font-bold justify-center">
+          <mat-icon fontSet="material-symbols-rounded">logout</mat-icon>
+          <span>Salir del Workspace</span>
+      </button>
+    </div>
+  </div>
+  }
+
+  <!-- Split Body Layout (Sidebar is placed first so it is rendered on the left) -->
+  <main class="wf-ws-body">
+    
+    <!-- Tabbed Control Sidebar (Left Sidebar) -->
+    <aside class="wf-ws-sidebar">
+
+      <!-- Scrollable Tab Content Panel -->
+      <div class="wf-ws-panel-content">
+
+        <!-- Tab 0: Departamentos (Now directly visible) -->
+        <div class="wf-ws-section">
+          <div class="wf-ws-section-title-bar">
+            <h2 class="wf-ws-section-title">
+              <mat-icon fontSet="material-symbols-rounded" aria-hidden="true" class="text-teal-600">domain</mat-icon>
+              Flujo Departamental
+            </h2>
+            @if (authService.currentUser()?.rol === 'ADMINISTRADOR') {
+              <div class="flex items-center gap-2">
+                <button (click)="abrirModalCarrilBpmn()" class="wf-ws-mini-btn btn-outline py-2 px-3 font-black">+ CARRIL</button>
+                <button (click)="abrirModalTareaCarrilBpmn()" class="wf-ws-mini-btn btn-outline py-2 px-3 font-black">+ TAREA</button>
+                <button (click)="crearPlantillaCuatroFlujos()" class="wf-ws-mini-btn btn-outline py-2 px-3 font-black">+ 4 FLUJOS</button>
+              </div>
+            }
+          </div>
+
+          <div class="mb-6">
+            <div class="relative flex items-center">
+              <input type="text" [ngModel]="deptSearchQuery()" (ngModelChange)="deptSearchQuery.set($event)"
+                placeholder="Filtrar por nombre..."
+                class="wf-ws-input w-full pr-10 py-2.5 text-[11px]" />
+              <mat-icon fontSet="material-symbols-rounded" class="absolute right-3 text-slate-900">search</mat-icon>
+            </div>
+          </div>
+
+          @if (loadingDepts()) {
+          <div class="py-12 text-center flex flex-col items-center gap-3">
+            <span class="h-8 w-8 border-4 border-teal-100 border-t-teal-600 rounded-full animate-spin"></span>
+            <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Sincronizando Org...</span>
+          </div>
+          } @else {
+          <div class="wf-ws-dept-list">
+            @for (d of filteredDepartamentos(); track d.id || d.nombre || $index) {
+            <div class="wf-ws-dept-card-new" [class.is-expanded]="expandedDeptId() === d.nombre">
+              
+              <div class="wf-ws-dept-header-compact" (click)="toggleDeptExpand(d.nombre)">
+                <h3 class="wf-ws-dept-name-compact">{{ d.nombre }}</h3>
+                <div class="flex items-center gap-4">
+                  <span class="px-2.5 py-1 bg-teal-50 border border-teal-100 text-teal-700 text-[10px] font-bold rounded-full">
+                    {{ getDeptWorkloadCount(d.nombre) }} TICKETS
+                  </span>
+                  <mat-icon fontSet="material-symbols-rounded" class="text-slate-400 transition-transform duration-300"
+                    [style.transform]="expandedDeptId() === d.nombre ? 'rotate(180deg)' : 'rotate(0deg)'">expand_more</mat-icon>
+                </div>
+              </div>
+
+              @if (expandedDeptId() === d.nombre) {
+              <div class="wf-ws-dept-expanded-content animate-slide-down">
+                <div class="grid grid-cols-2 gap-4">
+                  <button (click)="navigateToCrear(d.nombre)" class="wf-ws-mini-btn btn-primary py-2.5 font-black">SOLICITAR</button>
+                  @if (authService.currentUser()?.rol === 'ADMINISTRADOR') {
+                    <button (click)="crearYColocarTarea(d.nombre)" class="wf-ws-mini-btn btn-outline py-2.5 font-black">+ TAREA</button>
+                  }
+                  <button (click)="highlightLane(d.nombre)" class="wf-ws-mini-btn btn-outline col-span-2 py-2 font-black">ENFOCAR LANE</button>
+                </div>
+
+                <div class="flex flex-col gap-2.5 mt-4">
+                  <span class="text-[9px] font-black uppercase text-slate-400 border-b-2 border-slate-200 pb-1.5">Nodos en Diagrama</span>
+                  @for (t of obtenerTareasDeDepto(d.nombre); track t.id) {
+                    <div (click)="focusTask(t.id)" class="wf-ws-dept-row task-row">
+                      <span class="text-[11px] font-black">{{ t.name }}</span>
+                      <mat-icon fontSet="material-symbols-rounded" style="font-size: 16px; color: #6366f1;">gps_fixed</mat-icon>
+                    </div>
+                  } @empty {
+                    <p class="text-[10px] text-slate-400 italic text-center py-2">Sin asignaciones en el mapa.</p>
+                  }
+                </div>
+              </div>
+              }
+            </div>
+            }
+          </div>
+          }
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- BPMN Canvas (Placed second to be rendered on the right) -->
+    <section class="wf-ws-canvas-panel" (mousemove)="onMouseMove($event)">
+      <div #bpmnContainer class="bpmn-canvas-host"></div>
+
+      <!-- Real-time Cursors of Collaborators -->
+      @for (c of collaboratorsList(); track c.username) {
+        <div class="wf-ws-collaborator-cursor" 
+             [style.left.px]="c.x" 
+             [style.top.px]="c.y">
+          <svg class="wf-ws-cursor-pointer" viewBox="0 0 24 24" width="24" height="24">
+            <path d="M4.5 3V19.5L9.8 14.2H17.5L4.5 3Z" 
+                  [attr.fill]="c.rol === 'ADMINISTRADOR' ? '#6366f1' : '#0d9488'" 
+                  stroke="#ffffff" stroke-width="1.5" />
+          </svg>
+          <div class="wf-ws-cursor-label" [style.background-color]="c.rol === 'ADMINISTRADOR' ? '#6366f1' : '#0d9488'">
+            <span class="wf-ws-cursor-name">{{ c.name || c.username }}</span>
+            <span class="wf-ws-cursor-role">({{ c.depto }})</span>
+          </div>
+        </div>
+      }
+
+      <!-- HUD: Selected Element Controls -->
+      @if (selectedElement(); as el) {
+      <div class="wf-ws-hud-container">
+        <div class="wf-ws-hud-card">
+          <div class="wf-ws-hud-left">
+            <div class="wf-ws-hud-icon-box">
+              <mat-icon fontSet="material-symbols-rounded" style="font-size: 24px;">task</mat-icon>
+            </div>
+            <div class="wf-ws-hud-info">
+              <div class="wf-ws-hud-badge-row">
+                <span class="wf-ws-hud-type-badge">
+                  {{ el.type.replace('bpmn:', '') }}
+                </span>
+                <span class="wf-ws-hud-id">ID: {{ el.id }}</span>
+              </div>
+              <h3 class="wf-ws-hud-title">{{ el.name || 'Sin título' }}</h3>
+            </div>
+          </div>
+          <div class="wf-ws-hud-actions">
+            <button (click)="drillDownTab.set('solicitudes'); openDrillDown()"
+              class="wf-ws-hud-btn btn-primary">
+              <mat-icon fontSet="material-symbols-rounded" style="font-size: 16px;">analytics</mat-icon>
+              <span>Métricas</span>
+            </button>
+            
+            <button (click)="drillDownTab.set('formularios'); openDrillDown()"
+              class="wf-ws-hud-btn btn-outline">
+              <mat-icon fontSet="material-symbols-rounded" style="font-size: 16px;">psychology</mat-icon>
+              <span>Diseñar IA</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      }
+    </section>
+
+    <!-- ─── Premium Operational & AI Configuration Modal ──────────────────────── -->
+    @if (drillDownOpen() && selectedElement(); as el) {
+    <div class="wf-drilldown-overlay" (click)="closeDrillDown()">
+      <div class="wf-drilldown-card" (click)="$event.stopPropagation()">
+        
+        <!-- Header -->
+        <div class="wf-drilldown-header" [class.is-forms]="drillDownTab() === 'formularios'">
+          
+          <div class="wf-drilldown-header-title">
+            <div class="wf-drilldown-header-title-row">
+              <div class="wf-drilldown-header-dot"></div>
+              <h3 class="wf-drilldown-header-h3">
+                {{ drillDownTab() === 'formularios' ? 'Inteligencia de Datos' : (el.name || 'Gestión del Nodo') }}
+              </h3>
+            </div>
+            <span class="wf-drilldown-header-subtitle">
+              Tarea BPMN: {{ el.id }}
+            </span>
+          </div>
+
+          <button (click)="closeDrillDown()" class="wf-drilldown-close-btn">
+            <mat-icon fontSet="material-symbols-rounded">close</mat-icon>
+          </button>
+        </div>
+
+        <!-- Navigation Bar -->
+        <div class="wf-drilldown-nav">
+          <button class="wf-drilldown-nav-tab" 
+            [class.is-active]="drillDownTab() === 'solicitudes'"
+            (click)="drillDownTab.set('solicitudes')">VINCULAR TICKETS</button>
+          
+
+
+          <button class="wf-drilldown-nav-tab" 
+            [class.is-active]="drillDownTab() === 'backlog'"
+            (click)="drillDownTab.set('backlog')">MÉTRICAS</button>
+
+          <div class="flex-1"></div>
+
+          <button class="wf-drilldown-nav-tab is-ai" 
+            [class.is-active]="drillDownTab() === 'formularios'"
+            (click)="drillDownTab.set('formularios')">FORMULARIO IA</button>
+        </div>
+
+        <!-- Content Area -->
+        <div class="wf-drilldown-body wf-custom-scrollbar">
+          
+          @if (drillDownTab() === 'solicitudes') {
+            <div class="wf-drilldown-section-container">
+              <div>
+                <h4 class="wf-drilldown-title-h4">Tickets en esta Etapa ({{ drillDownTickets().length }})</h4>
+                @if (drillDownTickets().length === 0) {
+                  <div class="wf-drilldown-empty">Ningún ticket asignado en esta etapa</div>
+                } @else {
+                  <div class="wf-drilldown-grid">
+                    @for (t of drillDownTickets(); track t.id) {
+                      <div class="wf-drilldown-ticket-card">
+                        <div class="flex justify-between mb-3">
+                          <span class="wf-drilldown-ticket-code">#{{ t.codigoSeguimiento }}</span>
+                          <span class="wf-drilldown-ticket-priority">{{ t.prioridad }}</span>
+                        </div>
+                        <h5 class="wf-drilldown-ticket-title">{{ t.titulo }}</h5>
+                        <div class="wf-drilldown-ticket-actions">
+                          <a [routerLink]="['/detalle', t.id]" target="_blank" class="wf-drilldown-ticket-open-btn">ABRIR</a>
+                          <button (click)="desasignarTicketDeTarea(t.codigoSeguimiento!)" class="wf-drilldown-ticket-unlink-btn" title="Desvincular">
+                            <mat-icon fontSet="material-symbols-rounded" style="font-size: 18px;">link_off</mat-icon>
+                          </button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- Mostrar bandeja de entrada siempre que el nodo tenga un departamento asignado -->
+              @if (obtenerDepartamentoDeElemento(el.id)) {
+                <div class="wf-drilldown-dept-tray">
+                  <h4 class="wf-drilldown-dept-tray-title">Tickets del Departamento (Disponibles)</h4>
+                  <div class="wf-drilldown-dept-row-container">
+                    @for (s of obtenerSolicitudesSinAsignarDeDepto(); track s.id) {
+                      <div class="wf-drilldown-dept-row">
+                        <div class="wf-drilldown-dept-row-left">
+                          <span class="wf-drilldown-dept-row-title">{{ s.titulo }}</span>
+                          <span class="wf-drilldown-dept-row-meta">{{ s.codigoSeguimiento }} // {{ s.prioridad }}</span>
+                        </div>
+                        <button (click)="asignarTicketATarea(s.codigoSeguimiento!)" class="wf-drilldown-dept-row-link-btn">VINCULAR</button>
+                      </div>
+                    } @empty {
+                      <p class="wf-drilldown-dept-row-empty">No hay tickets pendientes en la bandeja de este departamento.</p>
+                    }
+                  </div>
+                </div>
+              } @else {
+                <div class="wf-drilldown-no-dept-assigned">
+                  <p class="wf-drilldown-no-dept-assigned-text">Para vincular tickets, primero asigna un departamento a esta tarea en la barra lateral.</p>
+                </div>
+              }
+            </div>
+          }
+
+
+
+          @if (drillDownTab() === 'backlog') {
+            <div class="wf-drilldown-metrics-grid">
+              <div class="wf-drilldown-metric-box">
+                <span class="wf-drilldown-metric-label">Tickets Activos</span>
+                <span class="wf-drilldown-metric-val">{{ drillDownMetrics().total }}</span>
+              </div>
+              <div class="wf-drilldown-metric-box is-teal">
+                <span class="wf-drilldown-metric-label">Tiempo de Atención</span>
+                <span class="wf-drilldown-metric-val">{{ drillDownMetrics().promedioLabel || '0m' }}</span>
+              </div>
+            </div>
+          }
+
+          @if (drillDownTab() === 'formularios') {
+            <div class="wf-drilldown-ai-container">
+              <div class="wf-drilldown-ai-gemini-box">
+                <h4 class="wf-drilldown-ai-gemini-title">Configuración de extracción local</h4>
+                <p class="wf-drilldown-ai-gemini-desc">Define los campos que el extractor local debe asociar después de la transcripción del navegador. Usa IDs descriptivos (ej: 'monto').</p>
+                <div class="wf-drilldown-ai-autosave-badge">
+                  <span class="wf-drilldown-ai-autosave-dot"></span>
+                  Autoguardado IA Activo (Los cambios se aplican en tiempo real)
+                </div>
+              </div>
+
+              <div class="wf-drilldown-ai-info-box">
+                <div class="wf-drilldown-ai-info-header">
+                  <mat-icon fontSet="material-symbols-rounded" style="color: #7c3aed;">smart_toy</mat-icon>
+                  <h5 class="wf-drilldown-ai-info-title">Copiloto IA Conectado</h5>
+                </div>
+                <p class="wf-drilldown-ai-info-text">
+                  ¡El Asistente IA está disponible en ambas pantallas! Utiliza el chat flotante <strong style="color: #4c1d95;">[AI]</strong> en esta vista técnica para optimizar flujos. El dictado por micrófono se realiza directamente en la vista de detalle de cada ticket para evitar interferencias.
+                </p>
+              </div>
+
+              <button (click)="addFormField()" class="wf-drilldown-ai-add-btn">+ TAREA PARÁMETRO IA</button>
+
+              <div class="wf-drilldown-ai-grid">
+                @for (field of formFields(); track $index) {
+                  <div class="wf-drilldown-ai-card">
+                    <button (click)="removeFormField($index)" class="wf-drilldown-ai-card-delete-btn">
+                      <mat-icon fontSet="material-symbols-rounded" style="font-size: 20px;">delete</mat-icon>
+                    </button>
+                    <div class="mb-4">
+                      <label class="wf-drilldown-ai-card-label">Etiqueta (UI)</label>
+                      <input type="text" [value]="field.label" (input)="updateFormField($index, { label: $any($event.target).value })" class="wf-drilldown-ai-card-input">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                      <div>
+                        <label class="wf-drilldown-ai-card-technical-label">ID Técnico (Internal)</label>
+                        <input type="text" [value]="field.name" (input)="updateFormField($index, { name: $any($event.target).value })" class="wf-drilldown-ai-card-technical-input">
+                      </div>
+                      <div>
+                        <label class="wf-drilldown-ai-card-label">Tipo de Dato</label>
+                        <select [value]="field.type" (change)="updateFormField($index, { type: $any($event.target).value })" class="wf-drilldown-ai-card-select">
+                          <option value="text">Texto Libre</option>
+                          <option value="number">Valor Numérico</option>
+                          <option value="date">Fecha / Calendario</option>
+                          <option value="select">Lista Desplegable</option>
+                          <option value="checkbox">Booleano (Check)</option>
+                          <option value="table">Tabla Dinámica</option>
+                        </select>
+                      </div>
+                    </div>
+                    @if (field.type === 'select') {
+                      <div class="mt-4">
+                        <label class="wf-drilldown-ai-card-label">Opciones (separadas por coma)</label>
+                        <input type="text" [value]="field.options || ''" (input)="updateFormField($index, { options: $any($event.target).value })" class="wf-drilldown-ai-card-input" placeholder="Alta, Media, Baja">
+                      </div>
+                    }
+                    @if (field.type === 'table') {
+                      <div class="mt-4">
+                        <label class="wf-drilldown-ai-card-label">Columnas (separadas por coma)</label>
+                        <input type="text" [value]="field.columns || ''" (input)="updateFormField($index, { columns: $any($event.target).value })" class="wf-drilldown-ai-card-input" placeholder="Producto, Cantidad, Precio">
+                      </div>
+                    }
+                  </div>
+                } @empty {
+                  <div class="wf-drilldown-ai-card-empty">Sin parámetros de IA configurados</div>
+                }
+              </div>
+            </div>
+          }
+          
+          @if (hasUnsavedChanges()) {
+            <div class="wf-drilldown-warning-banner">
+              <mat-icon fontSet="material-symbols-rounded" style="color: #ea580c;">warning</mat-icon>
+              <span class="wf-drilldown-warning-text">Cambios sin publicar: Los cambios en tickets o IA no serán permanentes hasta que hagas clic en el botón "PUBLICAR" del diseñador.</span>
+            </div>
+          }
+
+        </div>
+      </div>
+    </div>
+    }
+
+  </main>
+
+  <!-- MODALES APOYO -->
+  @if (showModalCrearDoc()) {
+  <div class="wf-ws-modal-overlay">
+    <div class="wf-ws-modal-card wf-modal-large">
+      <div class="wf-ws-modal-header mb-6">
+        <h3 class="wf-ws-modal-title">Registrar Nuevo Documento</h3>
+        <button (click)="showModalCrearDoc.set(false)" class="border-none bg-none cursor-pointer flex items-center justify-center">
+          <mat-icon fontSet="material-symbols-rounded">close</mat-icon>
+        </button>
+      </div>
+      <form [formGroup]="docForm" (ngSubmit)="crearDocumento()" class="flex flex-col gap-5">
+        <div class="flex flex-col gap-2">
+          <label class="text-[10px] font-black uppercase">Título</label>
+          <input type="text" formControlName="nombre" class="wf-ws-input py-3" />
+        </div>
+        <div class="flex flex-col gap-2">
+          <label class="text-[10px] font-black uppercase">Descripción</label>
+          <textarea formControlName="descripcion" rows="3" class="wf-ws-input resize-none"></textarea>
+        </div>
+        <div class="flex flex-col gap-2">
+          <label class="text-[10px] font-black uppercase">Fichero</label>
+          <input type="file" (change)="onFileSelected($event)" class="font-mono text-[10px]" />
+        </div>
+        <button type="submit" class="wf-ws-btn wf-ws-btn-primary py-4 font-black mt-2">CONFIRMAR REGISTRO</button>
+      </form>
+    </div>
+  </div>
+  }
+
+  @if (showModalNuevoProceso()) {
+  <div class="wf-ws-modal-overlay">
+    <div class="wf-ws-modal-card wf-modal-large">
+      <div class="wf-ws-modal-header mb-6">
+        <h3 class="wf-ws-modal-title">Configurar Nuevo Proceso</h3>
+        <button (click)="showModalNuevoProceso.set(false)" class="border-none bg-none cursor-pointer flex items-center justify-center">
+          <mat-icon fontSet="material-symbols-rounded">close</mat-icon>
+        </button>
+      </div>
+      <form [formGroup]="nuevoProcesoForm" (ngSubmit)="crearNuevoProceso()" class="flex flex-col gap-5">
+        <div class="flex flex-col gap-2">
+          <label class="text-[10px] font-black uppercase">Nombre Humano</label>
+          <input type="text" formControlName="name" class="wf-ws-input py-3" />
+        </div>
+        <div class="flex flex-col gap-2">
+          <label class="text-[10px] font-black uppercase">Key Técnica (BPMN)</label>
+          <input type="text" formControlName="key" class="wf-ws-input py-3 font-mono" />
+        </div>
+        <div class="flex flex-col gap-2">
+          <label class="text-[10px] font-black uppercase">Descripción</label>
+          <textarea
+            formControlName="description"
+            rows="3"
+            maxlength="250"
+            class="wf-ws-input resize-none"
+          ></textarea>
+        </div>
+        <button type="submit" class="wf-ws-btn wf-ws-btn-primary py-4 font-black mt-2">INICIALIZAR LIENZO</button>
+      </form>
+    </div>
+  </div>
+  }
+
+  @if (showModalNuevoCarril()) {
+  <div class="wf-ws-modal-overlay">
+    <div class="wf-ws-modal-card">
+      <div class="wf-ws-modal-header mb-6">
+        <h3 class="wf-ws-modal-title">Crear carril BPMN</h3>
+        <button (click)="showModalNuevoCarril.set(false)" class="border-none bg-none cursor-pointer flex items-center justify-center">
+          <mat-icon fontSet="material-symbols-rounded">close</mat-icon>
+        </button>
+      </div>
+      <div class="flex flex-col gap-4">
+        <label class="text-[10px] font-black uppercase">Responsable o carril</label>
+        <input type="text" [ngModel]="nuevoCarrilNombre()" (ngModelChange)="nuevoCarrilNombre.set($event)" class="wf-ws-input py-3" />
+        <button (click)="crearCarrilBpmn()" [disabled]="!nuevoCarrilNombre().trim()" class="wf-ws-btn wf-ws-btn-primary py-4 font-black">CREAR CARRIL</button>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (showModalNuevaTareaCarril()) {
+  <div class="wf-ws-modal-overlay">
+    <div class="wf-ws-modal-card">
+      <div class="wf-ws-modal-header mb-6">
+        <h3 class="wf-ws-modal-title">Crear tarea en carril</h3>
+        <button (click)="showModalNuevaTareaCarril.set(false)" class="border-none bg-none cursor-pointer flex items-center justify-center">
+          <mat-icon fontSet="material-symbols-rounded">close</mat-icon>
+        </button>
+      </div>
+      <div class="flex flex-col gap-4">
+        <label class="text-[10px] font-black uppercase">Carril responsable</label>
+        <input type="text" [ngModel]="nuevaTareaCarril()" (ngModelChange)="nuevaTareaCarril.set($event)" class="wf-ws-input py-3" />
+        <label class="text-[10px] font-black uppercase">Nombre de actividad</label>
+        <input type="text" [ngModel]="nuevaTareaNombre()" (ngModelChange)="nuevaTareaNombre.set($event)" class="wf-ws-input py-3" />
+        <button (click)="crearTareaEnCarrilBpmn()" [disabled]="!nuevaTareaCarril().trim() || !nuevaTareaNombre().trim()" class="wf-ws-btn wf-ws-btn-primary py-4 font-black">CREAR TAREA</button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- FULLSCREEN VISOR FOR SECURE DMS PREVIEWS (WITHOUT BREAKING ANYTHING) -->
+  @if (visorActivo() && selectedDoc()) {
+    <div class="fixed inset-0 z-[2000] bg-slate-50 flex flex-col animate-fade-in text-slate-800">
+      <!-- Header -->
+      <header class="h-16 border-b border-slate-200 bg-white px-4 flex items-center justify-between shadow-sm shrink-0">
+        <div class="flex items-center gap-3">
+          <button
+            (click)="visorActivo.set(false); selectedDoc.set(null)"
+            class="w-9 h-9 bg-slate-50 border border-slate-200 hover:bg-slate-100 flex items-center justify-center rounded-xl transition-all cursor-pointer"
+            title="Cerrar visor"
+          >
+            <mat-icon fontSet="material-symbols-rounded" class="!text-lg font-bold text-slate-600">arrow_back</mat-icon>
+          </button>
+          <div>
+            <h3 class="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-tight">{{ selectedDoc()?.nombre }}</h3>
+            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Visor Seguro · Versión Activa v{{ selectedDoc()?.versionActual }}</p>
+          </div>
+        </div>
+
+        <a
+          [href]="basePath + '/api/v1/documentos/' + selectedDoc()?.id + '/descargar'"
+          target="_blank"
+          class="bg-teal-700 hover:bg-teal-600 text-white px-4 py-2.5 text-[10px] font-bold uppercase rounded-xl transition shadow-sm text-center"
+        >
+          Descargar Documento
+        </a>
+      </header>
+
+      <!-- Visor Panel -->
+      <main class="flex-1 p-5 overflow-y-auto flex justify-center bg-slate-100">
+        <div class="w-full max-w-5xl border border-slate-200/80 bg-white shadow-xl rounded-2xl overflow-hidden flex flex-col min-h-[75vh]">
+          @if (selectedDoc()?.tipo === 'COLLABORATIVE') {
+            <div class="p-8 flex-grow">
+              <div class="document-rendered-view whitespace-pre-wrap text-sm leading-relaxed" [innerHTML]="selectedDoc()?.contenidoColaborativo || 'Sin contenido colaborativo registrado.'"></div>
+            </div>
+          } @else if (selectedDoc()?.versiones?.[(selectedDoc()?.versiones?.length || 1) - 1]; as activeVer) {
+            @if (esPdf(activeVer.tipoContenido)) {
+              <iframe 
+                [src]="getPdfUrl(activeVer.nombreAlmacenado)" 
+                class="w-full flex-1 border-none min-h-[75vh]" 
+                frameborder="0"
+              ></iframe>
+            } @else {
+              <div class="flex-grow flex flex-col items-center justify-center p-8 gap-4 text-center">
+                <div class="h-14 w-14 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center text-slate-400">
+                  <mat-icon fontSet="material-symbols-rounded" class="!text-3xl">insert_drive_file</mat-icon>
+                </div>
+                <div class="space-y-1.5">
+                  <h4 class="text-xs font-black uppercase text-slate-800">Vista previa del archivo no disponible</h4>
+                  <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Formato: {{ activeVer.tipoContenido }}</p>
+                </div>
+                <a
+                  [href]="archivoUrl(activeVer.nombreAlmacenado, true)"
+                  target="_blank"
+                  class="bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 px-5 py-2.5 text-xs font-bold uppercase rounded-xl transition"
+                >
+                  Abrir en una Nueva Pestaña
+                </a>
+              </div>
+            }
+          } @else {
+            <div class="flex-grow flex items-center justify-center p-8 text-center text-slate-450 italic">
+              Este documento no tiene versiones cargadas.
+            </div>
+          }
+        </div>
+      </main>
+    </div>
+  }
+
+  <!-- Voice dictation status toast / HUD overlay -->
+  @if (voiceService.isListening() || voiceProcessingStatus() || voiceService.lastError()) {
+    <div style="position: fixed; bottom: 24px; left: 24px; z-index: 10000; border: 3px solid #0f172a; background: #fff; padding: 12px 18px; box-shadow: 4px 4px 0 0 #0f172a; width: min(328px, calc(100vw - 48px)); box-sizing: border-box; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;" class="animate-bounce-in">
+      <div style="display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #0f172a; padding-bottom: 6px; margin-bottom: 6px;">
+        <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #ef4444;" [class.animate-pulse]="voiceService.isListening() || voiceProcessingStatus().includes('Analizando')"></span>
+        <h4 style="font-size: 10px; font-weight: 900; text-transform: uppercase; color: #0f172a; margin: 0;">Diseñador por Voz AI</h4>
+      </div>
+      <p style="font-size: 10px; font-weight: 750; color: #1e293b; margin: 0; line-height: 1.4; white-space: normal; overflow-wrap: anywhere;">
+        {{ voiceProcessingStatus() || voiceService.lastError() || voiceService.transcript() || 'Diga por ejemplo: "Crea una tarea de Facturación en Finanzas, luego conéctala a un Fin"' }}
+      </p>
+      @if (voiceService.getInterim()) {
+        <p style="font-size: 9px; font-weight: 500; color: #64748b; margin: 4px 0 0 0; font-style: italic;">
+          {{ voiceService.getInterim() }}
+        </p>
+      }
+    </div>
+  }
+
+</div>

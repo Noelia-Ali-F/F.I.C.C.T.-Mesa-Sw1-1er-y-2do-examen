@@ -1,0 +1,372 @@
+/* ── Consolidated Files Viewer Component CSS ── */
+
+:host {
+  display: block;
+}
+
+/* Custom select dropdown styling matching styles.css */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+  background-position: right 0.65rem center;
+  background-repeat: no-repeat;
+  background-size: 1.15rem;
+  padding-right: 2.25rem !important;
+  transition: all 0.2s var(--ease-smooth);
+}
+
+select:focus {
+  border-color: var(--theme-primary-color) !important;
+  box-shadow: 0 0 0 1px var(--theme-primary-color);
+}
+
+/* ── KPI Telemetry Bar ── */
+.telemetry-card {
+  background-color: var(--theme-surface-color);
+  border: 1px solid var(--theme-element-border-color);
+  border-radius: 0.85rem;
+  padding: 1.125rem;
+  box-shadow: var(--theme-shadow-sm);
+  transition: all 0.3s var(--ease-smooth);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.telemetry-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--theme-shadow-md);
+  border-color: color-mix(in srgb, var(--theme-primary-color) 25%, var(--theme-element-border-color));
+}
+
+.telemetry-icon-box {
+  height: 2.25rem;
+  width: 2.25rem;
+  border-radius: 0.65rem;
+  background-color: var(--theme-surface-light-color);
+  border: 1px solid var(--theme-element-border-color);
+  color: var(--theme-slate-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Colores de iconos KPIs que combinan con el tema primario */
+.telemetry-card:hover .telemetry-icon-box {
+  color: var(--theme-primary-color);
+  background-color: var(--theme-primary-light-color);
+  border-color: rgba(15, 118, 110, 0.15);
+}
+
+.telemetry-icon-box.sky {
+  background-color: rgba(14, 165, 233, 0.05);
+  border-color: rgba(14, 165, 233, 0.12);
+  color: #0ea5e9;
+}
+
+.telemetry-icon-box.indigo {
+  background-color: rgba(79, 70, 229, 0.05);
+  border-color: rgba(79, 70, 229, 0.12);
+  color: #4f46e5;
+}
+
+.telemetry-icon-box.slate {
+  background-color: rgba(100, 116, 139, 0.05);
+  border-color: rgba(100, 116, 139, 0.12);
+  color: #64748b;
+}
+
+/* ── Segmented Catalog Tabs ── */
+.tab-pill-bar {
+  display: flex;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--theme-element-border-color);
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.tab-pill-btn {
+  padding: 0.75rem 1.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid transparent;
+  color: var(--theme-slate-500);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.25s var(--ease-smooth);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+}
+
+.tab-pill-btn:hover {
+  color: var(--theme-border-text-color);
+  background-color: var(--theme-primary-light-color);
+}
+
+.tab-pill-btn.is-active {
+  border-bottom-color: var(--theme-primary-color);
+  color: var(--theme-primary-color);
+  font-weight: 800;
+  background-color: var(--theme-primary-light-color);
+}
+
+/* ── File Item Cards ── */
+.file-item-card {
+  background-color: var(--theme-surface-color);
+  border: 1px solid var(--theme-element-border-color);
+  border-radius: 0.85rem;
+  padding: 1.125rem;
+  box-shadow: var(--theme-shadow-sm);
+  transition: all 0.25s var(--ease-smooth);
+  cursor: pointer;
+  display: flex;
+  gap: 1.25rem;
+  align-items: center;
+}
+
+.file-item-card:hover {
+  transform: translateY(-2.5px);
+  box-shadow: var(--theme-shadow-md);
+  border-color: color-mix(in srgb, var(--theme-primary-color) 35%, var(--theme-element-border-color));
+}
+
+.file-item-card.is-selected {
+  border-color: var(--theme-primary-color);
+  background-color: var(--theme-primary-light-color);
+  box-shadow: 0 4px 16px rgba(15, 118, 110, 0.05);
+}
+
+/* Action icon buttons */
+.action-btn {
+  height: 2.15rem;
+  width: 2.15rem;
+  border-radius: 0.65rem;
+  border: 1px solid var(--theme-element-border-color);
+  background-color: var(--theme-surface-color);
+  color: var(--theme-slate-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s var(--ease-smooth);
+  cursor: pointer;
+}
+
+.action-btn:hover {
+  background-color: var(--theme-surface-hover-color);
+  color: var(--theme-border-text-color);
+  border-color: rgba(15, 118, 110, 0.25);
+  transform: scale(1.05);
+}
+
+.action-btn.primary {
+  background: linear-gradient(135deg, var(--theme-primary-color), var(--theme-primary-hover-color));
+  color: #ffffff;
+  border: 1px solid transparent;
+  box-shadow: 0 2px 8px rgba(15, 118, 110, 0.15);
+}
+
+.action-btn.primary:hover {
+  background: linear-gradient(135deg, var(--theme-primary-hover-color), var(--theme-primary-color));
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.25);
+}
+
+/* ── File Inspector Card (Panel Derecho) ── */
+.inspector-card {
+  background-color: var(--theme-surface-color);
+  border: 1px solid var(--theme-element-border-color);
+  border-radius: 0.85rem;
+  box-shadow: var(--theme-shadow-sm);
+  overflow: hidden;
+  transition: all 0.3s var(--ease-smooth);
+}
+
+.inspector-card:hover {
+  border-color: color-mix(in srgb, var(--theme-primary-color) 15%, var(--theme-element-border-color));
+  box-shadow: var(--theme-shadow-md);
+}
+
+.inspector-header {
+  padding: 1.125rem;
+  background-color: var(--theme-surface-light-color);
+  border-b: 1px solid var(--theme-element-border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.inspector-preview-box {
+  padding: 1.5rem;
+  background-color: var(--theme-surface-light-color);
+  border-bottom: 1px solid var(--theme-element-border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 14rem;
+  max-height: 19rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.inspector-body {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+}
+
+.inspector-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.inspector-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--theme-slate-500);
+  letter-spacing: 0.05em;
+}
+
+.inspector-value {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--theme-border-text-color);
+  word-break: break-all;
+}
+
+/* Specific button in secondary header */
+.inspector-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--theme-slate-500);
+  background: var(--theme-surface-color);
+  border: 1px solid var(--theme-element-border-color);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-smooth);
+}
+
+.inspector-btn-secondary:hover {
+  color: var(--theme-border-text-color);
+  background: var(--theme-surface-hover-color);
+  border-color: rgba(15, 118, 110, 0.2);
+}
+
+.inspector-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--theme-primary-color), var(--theme-primary-hover-color));
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(15, 118, 110, 0.12);
+  transition: all 0.2s var(--ease-smooth);
+}
+
+.inspector-btn-primary:hover {
+  background: linear-gradient(135deg, var(--theme-primary-hover-color), var(--theme-primary-color));
+  box-shadow: 0 4px 10px rgba(15, 118, 110, 0.24);
+}
+
+/* Auditing cards inside inspector */
+.inspector-audit-card {
+  background-color: var(--theme-surface-light-color);
+  border: 1px solid var(--theme-element-border-color);
+  border-radius: 0.75rem;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.inspector-mono-badge {
+  font-family: monospace;
+  font-size: 0.7rem;
+  word-break: break-all;
+  padding: 0.5rem 0.75rem;
+  background-color: rgba(15, 118, 110, 0.03);
+  border: 1px solid var(--theme-element-border-color);
+  border-radius: 0.5rem;
+  color: var(--theme-primary-color);
+}
+
+/* Empty state card for inspector */
+.inspector-empty-card {
+  background-color: var(--theme-surface-color);
+  border: 1px solid var(--theme-element-border-color);
+  border-radius: 0.85rem;
+  padding: 3.5rem 2rem;
+  box-shadow: var(--theme-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 1.25rem;
+  min-height: 28rem; /* Tall card that aligns beautifully with the file list */
+  position: sticky;
+  top: 1.5rem;
+  transition: all 0.3s var(--ease-smooth);
+}
+
+.inspector-empty-card:hover {
+  border-color: color-mix(in srgb, var(--theme-primary-color) 15%, var(--theme-element-border-color));
+  box-shadow: var(--theme-shadow-md);
+}
+
+.inspector-empty-icon-box {
+  height: 4rem;
+  width: 4rem;
+  border-radius: 1rem;
+  background-color: var(--theme-surface-light-color);
+  border: 1px solid var(--theme-element-border-color);
+  color: var(--theme-slate-400);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.01);
+}
+
+.inspector-empty-title {
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--theme-border-text-color);
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.inspector-empty-text {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--theme-slate-500);
+  line-height: 1.5;
+  max-width: 18rem;
+  margin: 0.25rem 0 0 0;
+}
+
+/* Material icons alignment */
+mat-icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+}
